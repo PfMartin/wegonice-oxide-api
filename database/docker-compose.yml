@@ -1,0 +1,10 @@
+services:
+  wegonice-db:
+    image: "mongo:8"
+    container_name: "wegonice-db"
+    env_file:
+      - ../.env
+    volumes:
+      - ./data/db:/data/db
+    ports:
+      - "27017-27019:27017-27019"
