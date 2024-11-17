@@ -1,9 +1,14 @@
-use crate::db::db_handler::DbHandler;
-use anyhow::Result;
-use mongodb::{options::ClientOptions, Client, Database};
+use crate::{
+    db::db_handler::DbHandler,
+    model::user::{Role, User, UserCreate, UserDb},
+};
+use anyhow::{anyhow, Result};
+use bson::{doc, oid::ObjectId};
+use mongodb::{options::ClientOptions, Client, Collection};
+use std::str::FromStr;
 
 pub struct MongoDbHandler {
-    pub users_db: Database,
+    pub users_collection: Collection<UserDb>,
 }
 
 impl MongoDbHandler {
@@ -12,18 +17,45 @@ impl MongoDbHandler {
         let client_options = ClientOptions::parse(uri).await?;
         let client = Client::with_options(client_options)?;
 
-        let users_db = client.database("users");
+        let db = client.database(db_name);
+        let users_collection = db.collection("users");
 
-        let db_handler = MongoDbHandler { users_db: users_db };
+        let db_handler = MongoDbHandler { users_collection };
 
         Ok(db_handler)
     }
 }
 
 impl DbHandler for MongoDbHandler {
-    async fn get_user_by_id(&self, id: &str) -> Result<String> {
-        let new_id = format!("{id}");
+    async fn get_user_by_id(&self, id: &str) -> Result<User> {
+        let object_id = ObjectId::from_str(id)?;
 
-        Ok(new_id.into())
+        let user_db = self
+            .users_collection
+            .find_one(doc! {"_id": object_id})
+            .await?;
+
+        let user: User = match user_db {
+            Some(u) => u.into(),
+            None => return Err(anyhow!(format!("Failed to find user with id: {id}"))),
+        };
+
+        Ok(user)
+    }
+
+    async fn create_user(&self, user: UserCreate) -> Result<String> {
+        let user_db = UserDb {
+            id: None,
+            email: user.email,
+            password_hash: user.password_hash,
+            role: Role::User,
+            is_activated: false,
+            created_at: bson::DateTime::now(),
+            modified_at: bson::DateTime::now(),
+        };
+
+        let insert_result = self.users_collection.insert_one(&user_db).await?;
+
+        Ok(insert_result.inserted_id.to_string())
     }
 }
