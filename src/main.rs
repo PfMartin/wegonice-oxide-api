@@ -2,9 +2,12 @@ mod config;
 mod db;
 mod model;
 
+#[cfg(test)]
+mod test_utils;
+
 use anyhow::{Error, Result};
 use config::Config;
-use db::{db_handler::DbHandler, mongo_db_handler::MongoDbHandler};
+use db::{mongo_db_handler::MongoDbHandler, user_handler::UserHandler};
 use model::user::UserCreate;
 
 #[tokio::main]

@@ -30,6 +30,7 @@ impl Config {
 #[cfg(test)]
 pub mod unit_tests_config {
     use super::*;
+    use crate::test_utils::print_assert_failed;
 
     #[test]
     fn get_config() -> Result<()> {
@@ -80,12 +81,5 @@ pub mod unit_tests_config {
         }
 
         Ok(())
-    }
-
-    pub fn print_assert_failed(title: &str, expected: &str, got: &str) -> String {
-        format!(
-            "{} failed: Expected '{:?}', but Got '{:?}'",
-            title, expected, got
-        )
     }
 }
