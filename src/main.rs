@@ -1,13 +1,23 @@
+mod config;
 mod db;
 mod model;
 
 use anyhow::{Error, Result};
+use config::Config;
 use db::{db_handler::DbHandler, mongo_db_handler::MongoDbHandler};
 use model::user::UserCreate;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let db_handler = MongoDbHandler::new("test", "hello", "he", "127.0.0.1:27017").await?;
+    let config = Config::new()?;
+
+    let db_handler = MongoDbHandler::new(
+        &config.db_name,
+        &config.db_user_name,
+        &config.db_user_password,
+        &config.db_host,
+    )
+    .await?;
 
     db_handler.get_user_by_id("testId").await?;
     db_handler

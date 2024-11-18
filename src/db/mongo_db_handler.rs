@@ -59,3 +59,36 @@ impl DbHandler for MongoDbHandler {
         Ok(insert_result.inserted_id.to_string())
     }
 }
+
+// #[cfg(test)]
+// pub mod unit_tests_users_handler {
+//     use super::*;
+//     use tokio::test;
+
+//     #[test]
+//     async fn create_user() -> Result<()> {
+//         struct TestCase {
+//             title: String,
+//             test_user: UserCreate,
+//             expected_insert_success: bool,
+//             expected_role: Role,
+//         }
+
+//         let test_cases = vec![TestCase {
+//             title: String::from("Successfully creates user"),
+//             test_user: UserCreate {
+//                 email: String::from("test@user.com"),
+//                 password_hash: String::from("testpassword"),
+//             },
+//             expected_insert_success: true,
+//             expected_role: Role::User,
+//         }];
+
+//         async fn run_test(t: &TestCase) -> Result<()> {
+
+//             let db_handler = MongoDbHandler::new().await?;
+//         }
+
+//         Ok(())
+//     }
+// }
