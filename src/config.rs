@@ -2,6 +2,7 @@ use anyhow::Result;
 use dotenv::dotenv;
 use std::env;
 
+#[derive(Debug)]
 pub struct Config {
     pub db_name: String,
     pub db_user_name: String,

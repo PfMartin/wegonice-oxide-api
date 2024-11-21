@@ -1,7 +1,7 @@
-use bson::oid::ObjectId;
+use bson::{oid::ObjectId, DateTime};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Copy)]
+#[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Debug)]
 pub enum Role {
     Admin,
     User,
@@ -14,8 +14,8 @@ pub struct UserDb {
     pub password_hash: String,
     pub role: Role,
     pub is_activated: bool,
-    pub created_at: bson::DateTime,
-    pub modified_at: bson::DateTime,
+    pub created_at: DateTime,
+    pub modified_at: DateTime,
 }
 
 pub struct User {
@@ -23,8 +23,8 @@ pub struct User {
     pub email: String,
     pub role: Role,
     pub is_activated: bool,
-    pub created_at: bson::DateTime,
-    pub modified_at: bson::DateTime,
+    pub created_at: DateTime,
+    pub modified_at: DateTime,
 }
 
 impl Into<User> for UserDb {
@@ -45,7 +45,7 @@ impl Into<User> for UserDb {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UserCreate {
     pub email: String,
