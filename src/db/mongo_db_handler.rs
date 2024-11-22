@@ -1,10 +1,11 @@
 use crate::model::user::UserDb;
 use anyhow::Result;
 
-use mongodb::{options::ClientOptions, Client, Collection};
+use mongodb::{options::ClientOptions, Client, Collection, Database};
 
 pub struct MongoDbHandler {
     pub users_collection: Collection<UserDb>,
+    pub db: Database,
 }
 
 impl MongoDbHandler {
@@ -16,7 +17,10 @@ impl MongoDbHandler {
         let db = client.database(db_name);
         let users_collection = db.collection("users");
 
-        let db_handler = MongoDbHandler { users_collection };
+        let db_handler = MongoDbHandler {
+            users_collection,
+            db,
+        };
 
         Ok(db_handler)
     }
