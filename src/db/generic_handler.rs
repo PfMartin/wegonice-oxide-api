@@ -51,3 +51,26 @@ impl GenericHandler for MongoDbHandler {
         }
     }
 }
+
+#[cfg(test)]
+pub mod unit_tests_generic_handler {
+    use super::*;
+    use crate::{model::user::UserDb, test_utils::get_random_user_db};
+    use anyhow::Result;
+    use tokio::test;
+
+    #[test]
+    async fn get_multiple_users() -> Result<()> {
+        struct TestCase {
+            title: String,
+            test_users: Vec<UserDb>,
+        }
+
+        let test_cases = vec![TestCase {
+            title: "Successfully gets all users".into(),
+            test_users: vec![get_random_user_db()],
+        }];
+
+        Ok(())
+    }
+}

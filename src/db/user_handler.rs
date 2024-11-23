@@ -70,10 +70,10 @@ pub mod unit_tests_users_handler {
         }
 
         let test_cases = vec![TestCase {
-            title: String::from("Successfully creates user"),
+            title: "Successfully creates user".into(),
             test_user: UserCreate {
-                email: String::from("test@user.com"),
-                password_hash: String::from("testpassword"),
+                email: "test@user.com".into(),
+                password_hash: "testpassword".into(),
             },
             expected_insert_success: true,
             expected_role: Role::User,
