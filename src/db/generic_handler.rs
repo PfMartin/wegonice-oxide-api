@@ -119,12 +119,24 @@ pub mod unit_tests_generic_handler {
         struct TestCase {
             title: String,
             test_users: Vec<UserDb>,
+            test_id: Option<String>,
+            is_success: bool,
         }
 
-        let test_cases = vec![TestCase {
-            title: "Successfully get a user by id".into(),
-            test_users: vec![get_random_user_db(), get_random_user_db()],
-        }];
+        let test_cases = vec![
+            TestCase {
+                title: "Successfully get a user by id".into(),
+                test_users: vec![get_random_user_db(), get_random_user_db()],
+                test_id: None,
+                is_success: true,
+            },
+            TestCase {
+                title: "Fails to get a user by id with non-existing id".into(),
+                test_users: vec![get_random_user_db(), get_random_user_db()],
+                test_id: Some("non-existent".into()),
+                is_success: false,
+            },
+        ];
 
         let config = Config::new()?;
 
@@ -151,47 +163,56 @@ pub mod unit_tests_generic_handler {
                 None => return Err(anyhow!("Failed to get first user from test users")),
             };
 
-            let id = match user_to_find.id {
-                Some(i) => &i.to_hex(),
-                None => "wrong",
+            let id = match t.test_id {
+                Some(id) => id,
+                None => match user_to_find.id {
+                    Some(i) => i.to_hex(),
+                    None => "wrong".into(),
+                },
             };
 
-            let got_user = db_handler.get_by_id::<UserDb, User>(id, "users").await?;
+            let get_result = db_handler.get_by_id::<UserDb, User>(&id, "users").await;
 
-            assert_eq!(
-                got_user.id,
-                id,
-                "{}",
-                print_assert_failed(&t.title, &got_user.id, &id)
-            );
-            assert_eq!(
-                got_user.email,
-                user_to_find.email,
-                "{}",
-                print_assert_failed(&t.title, &got_user.email, &user_to_find.email)
-            );
-            assert_eq!(
-                got_user.role,
-                user_to_find.role,
-                "{}",
-                print_assert_failed(
-                    &t.title,
-                    &format!("{:?}", got_user.role),
-                    &format!("{:?}", user_to_find.role)
-                )
-            );
-            assert_eq!(
-                got_user.is_activated,
-                user_to_find.is_activated,
-                "{}",
-                print_assert_failed(
-                    &t.title,
-                    &format!("{:?}", got_user.is_activated),
-                    &format!("{:?}", user_to_find.is_activated)
-                )
-            );
-            assert_date_is_current(got_user.created_at, &t.title)?;
-            assert_date_is_current(got_user.modified_at, &t.title)?;
+            if t.is_success {
+                let got_user = get_result?;
+
+                assert_eq!(
+                    got_user.id,
+                    id,
+                    "{}",
+                    print_assert_failed(&t.title, &got_user.id, &id)
+                );
+                assert_eq!(
+                    got_user.email,
+                    user_to_find.email,
+                    "{}",
+                    print_assert_failed(&t.title, &got_user.email, &user_to_find.email)
+                );
+                assert_eq!(
+                    got_user.role,
+                    user_to_find.role,
+                    "{}",
+                    print_assert_failed(
+                        &t.title,
+                        &format!("{:?}", got_user.role),
+                        &format!("{:?}", user_to_find.role)
+                    )
+                );
+                assert_eq!(
+                    got_user.is_activated,
+                    user_to_find.is_activated,
+                    "{}",
+                    print_assert_failed(
+                        &t.title,
+                        &format!("{:?}", got_user.is_activated),
+                        &format!("{:?}", user_to_find.is_activated)
+                    )
+                );
+                assert_date_is_current(got_user.created_at, &t.title)?;
+                assert_date_is_current(got_user.modified_at, &t.title)?;
+            } else {
+                assert!(get_result.is_err())
+            }
         }
 
         db_clean_up(&db_handler).await?;
