@@ -22,7 +22,6 @@ async fn main() -> Result<(), Error> {
     )
     .await?;
 
-    db_handler.get_user_by_id("testId").await?;
     db_handler
         .create_user(UserCreate {
             email: String::from("Test"),

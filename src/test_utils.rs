@@ -4,7 +4,10 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use bson::{doc, oid::ObjectId, DateTime};
+use dotenv::dotenv;
+use mongodb::{options::ClientOptions, Client, Database};
 use rand::{distributions::Alphanumeric, Rng};
+use std::env;
 
 #[cfg(test)]
 pub fn print_assert_failed(title: &str, expected: &str, got: &str) -> String {
@@ -34,6 +37,25 @@ pub fn assert_date_is_current(date: DateTime, title: &str) -> Result<()> {
     );
 
     Ok(())
+}
+
+#[cfg(test)]
+pub async fn get_db_connection() -> Result<Database> {
+    dotenv()?;
+
+    let db_name = env::var("MONGO_WEGONICE_DB")?;
+    let db_user_name = env::var("MONGO_WEGONICE_USER")?;
+    let db_user_password = env::var("MONGO_WEGONICE_PASSWORD")?;
+    let db_host = env::var("MONGO_WEGONICE_HOST")?;
+
+    let uri = format!(
+        "mongodb://{db_user_name}:{db_user_password}@{db_host}/{db_name}?authSource={db_name}"
+    );
+    let client_options = ClientOptions::parse(uri).await?;
+
+    let client = Client::with_options(client_options)?;
+
+    Ok(client.database(&db_name))
 }
 
 #[cfg(test)]
