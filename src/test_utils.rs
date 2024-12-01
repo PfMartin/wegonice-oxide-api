@@ -70,7 +70,7 @@ pub async fn db_clean_up(db_handler: &MongoDbHandler) -> Result<()> {
 }
 
 #[cfg(test)]
-fn get_random_string(length: usize) -> String {
+pub fn get_random_string(length: usize) -> String {
     rand::thread_rng()
         .sample_iter(&Alphanumeric)
         .take(length)
@@ -79,9 +79,14 @@ fn get_random_string(length: usize) -> String {
 }
 
 #[cfg(test)]
-pub fn get_random_user_db() -> UserDb {
+pub fn get_random_user_db(id: Option<ObjectId>) -> UserDb {
+    let user_id = match id {
+        Some(object_id) => object_id,
+        None => ObjectId::new(),
+    };
+
     UserDb {
-        id: Some(ObjectId::new()),
+        id: Some(user_id),
         email: get_random_string(10),
         password_hash: get_random_string(10),
         role: Role::User,

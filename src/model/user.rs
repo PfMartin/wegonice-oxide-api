@@ -27,6 +27,15 @@ pub struct User {
     pub modified_at: DateTime,
 }
 
+impl Into<UserCreate> for UserDb {
+    fn into(self) -> UserCreate {
+        UserCreate {
+            email: self.email,
+            password_hash: self.password_hash,
+        }
+    }
+}
+
 impl Into<User> for UserDb {
     fn into(self) -> User {
         let id = match self.id {
@@ -50,4 +59,13 @@ impl Into<User> for UserDb {
 pub struct UserCreate {
     pub email: String,
     pub password_hash: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct UserPatch {
+    pub email: Option<String>,
+    pub password_hash: Option<String>,
+    pub role: Option<Role>,
+    pub is_activated: Option<bool>,
 }

@@ -79,7 +79,7 @@ pub mod unit_tests_generic_handler {
 
         let test_cases = vec![TestCase {
             title: "Successfully gets all users".into(),
-            test_users: vec![get_random_user_db(), get_random_user_db()],
+            test_users: vec![get_random_user_db(None), get_random_user_db(None)],
         }];
 
         let config = Config::new()?;
@@ -91,8 +91,6 @@ pub mod unit_tests_generic_handler {
             &config.db_host,
         )
         .await?;
-
-        db_clean_up(&db_handler).await?;
 
         for t in test_cases {
             let db = get_db_connection().await?;
@@ -126,13 +124,13 @@ pub mod unit_tests_generic_handler {
         let test_cases = vec![
             TestCase {
                 title: "Successfully get a user by id".into(),
-                test_users: vec![get_random_user_db(), get_random_user_db()],
+                test_users: vec![get_random_user_db(None), get_random_user_db(None)],
                 test_id: None,
                 is_success: true,
             },
             TestCase {
                 title: "Fails to get a user by id with non-existing id".into(),
-                test_users: vec![get_random_user_db(), get_random_user_db()],
+                test_users: vec![get_random_user_db(None), get_random_user_db(None)],
                 test_id: Some("non-existent".into()),
                 is_success: false,
             },
@@ -147,8 +145,6 @@ pub mod unit_tests_generic_handler {
             &config.db_host,
         )
         .await?;
-
-        db_clean_up(&db_handler).await?;
 
         for t in test_cases {
             let db = get_db_connection().await?;
