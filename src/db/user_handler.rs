@@ -7,6 +7,7 @@ use bson::{doc, oid::ObjectId, to_bson, Bson, DateTime};
 pub trait UserHandler {
     async fn create_user(&self, user: UserCreate) -> Result<String>;
     async fn patch_user_by_id(&self, id: &str, user_patch: UserPatch) -> Result<()>;
+    async fn delete_user_by_id(&self, id: &str) -> Result<u64>;
 }
 
 impl UserHandler for MongoDbHandler {
@@ -64,6 +65,15 @@ impl UserHandler for MongoDbHandler {
         self.users_collection.update_one(filter, update).await?;
 
         Ok(())
+    }
+
+    async fn delete_user_by_id(&self, id: &str) -> Result<u64> {
+        let object_id = ObjectId::parse_str(id)?;
+        let filter = doc! {"_id": object_id};
+
+        let delete_result = self.users_collection.delete_one(filter).await?;
+
+        Ok(delete_result.deleted_count)
     }
 }
 
@@ -193,20 +203,9 @@ pub mod unit_tests_users_handler {
             )
             .await?;
 
-            let insert_result = db_handler
+            let inserted_id = db_handler
                 .create_user(get_random_user_db(None).into())
-                .await;
-            assert_eq!(
-                insert_result.is_ok(),
-                true,
-                "{}",
-                print_assert_failed(
-                    &t.title,
-                    &format!("{:?}", true),
-                    &format!("{:?}", insert_result)
-                )
-            );
-            let inserted_id = insert_result?;
+                .await?;
 
             let patch_result = db_handler
                 .patch_user_by_id(&inserted_id, t.user_patch.clone())
@@ -272,6 +271,61 @@ pub mod unit_tests_users_handler {
                     assert_date_is_current(user.modified_at, &t.title)?;
                 }
                 None => return Err(anyhow!("Failed to find user with object id: {object_id}")),
+            }
+
+            db_clean_up(&db_handler).await?;
+
+            Ok(())
+        }
+
+        for t in test_cases {
+            run_test(&t).await?;
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    async fn delete_user() -> Result<()> {
+        struct TestCase {
+            title: String,
+            is_success: bool,
+        }
+
+        let test_cases = vec![TestCase {
+            title: "Successfully deletes a user".into(),
+            is_success: true,
+        }];
+
+        async fn run_test(t: &TestCase) -> Result<()> {
+            let config = Config::new()?;
+
+            let db_handler = MongoDbHandler::new(
+                &config.db_user_name,
+                &config.db_user_password,
+                &config.db_name,
+                &config.db_host,
+            )
+            .await?;
+
+            let inserted_id = db_handler
+                .create_user(get_random_user_db(None).into())
+                .await?;
+
+            let delete_count = db_handler.delete_user_by_id(&inserted_id).await?;
+
+            if t.is_success {
+                let expected_delete_count = 1;
+                assert_eq!(
+                    delete_count,
+                    expected_delete_count,
+                    "{}",
+                    print_assert_failed(
+                        &t.title,
+                        &format!("{:?}", delete_count),
+                        &format!("{:?}", expected_delete_count)
+                    )
+                );
             }
 
             db_clean_up(&db_handler).await?;
