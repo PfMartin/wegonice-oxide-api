@@ -1,6 +1,6 @@
 use crate::{
     db::mongo_db_handler::MongoDbHandler,
-    model::user::{Role, UserDb},
+    model::user::{Role, User, UserDb},
 };
 use anyhow::{anyhow, Result};
 use bson::{doc, oid::ObjectId, DateTime};
@@ -37,6 +37,36 @@ pub fn assert_date_is_current(date: DateTime, title: &str) -> Result<()> {
     );
 
     Ok(())
+}
+
+#[cfg(test)]
+pub fn assert_users_match(title: &str, user_1: &User, user_2: &User) {
+    assert_eq!(
+        user_1.email,
+        user_2.email,
+        "{}",
+        print_assert_failed(title, &user_1.email, &user_2.email)
+    );
+    assert_eq!(
+        user_1.role,
+        user_2.role,
+        "{}",
+        print_assert_failed(
+            title,
+            &format!("{:?}", user_1.role),
+            &format!("{:?}", user_2.role)
+        )
+    );
+    assert_eq!(
+        user_1.is_activated,
+        user_2.is_activated,
+        "{}",
+        print_assert_failed(
+            title,
+            &format!("{:?}", user_1.is_activated),
+            &format!("{:?}", user_2.is_activated)
+        )
+    );
 }
 
 #[cfg(test)]
