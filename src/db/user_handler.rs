@@ -181,16 +181,28 @@ pub mod unit_tests_users_handler {
             is_success: bool,
         }
 
-        let test_cases = vec![TestCase {
-            title: "Successfully patches existing user".into(),
-            user_patch: UserPatch {
-                email: Some("patched@user.com".into()),
-                password_hash: Some("patchedPassword".into()),
-                role: Some(Role::Admin),
-                is_activated: Some(false),
+        let test_cases = vec![
+            TestCase {
+                title: "Successfully patches existing user".into(),
+                user_patch: UserPatch {
+                    email: Some("patched@user.com".into()),
+                    password_hash: Some("patchedPassword".into()),
+                    role: Some(Role::Admin),
+                    is_activated: Some(false),
+                },
+                is_success: true,
             },
-            is_success: true,
-        }];
+            TestCase {
+                title: "Fails to patch existing user due to invalid objectId".into(),
+                user_patch: UserPatch {
+                    email: Some("patched@user.com".into()),
+                    password_hash: Some("patchedPassword".into()),
+                    role: Some(Role::Admin),
+                    is_activated: Some(false),
+                },
+                is_success: false,
+            },
+        ];
 
         async fn run_test(t: &TestCase) -> Result<()> {
             let config = Config::new(".env")?;
@@ -207,16 +219,23 @@ pub mod unit_tests_users_handler {
                 .create_user(get_random_user_db(None).into())
                 .await?;
 
+            let user_id = if t.is_success {
+                inserted_id
+            } else {
+                String::from("invalidId")
+            };
+
             let patch_result = db_handler
-                .patch_user_by_id(&inserted_id, t.user_patch.clone())
+                .patch_user_by_id(&user_id, t.user_patch.clone())
                 .await;
 
-            if t.is_success {
-                assert!(patch_result.is_ok())
+            if !t.is_success {
+                assert!(patch_result.is_err());
+                return Ok(());
             }
 
             let db = get_db_connection().await?;
-            let object_id = ObjectId::parse_str(&inserted_id)?;
+            let object_id = ObjectId::parse_str(&user_id)?;
 
             let user_db = db
                 .collection::<UserDb>("users")
