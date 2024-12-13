@@ -112,7 +112,7 @@ pub mod unit_tests_users_handler {
         }];
 
         async fn run_test(t: &TestCase) -> Result<()> {
-            let config = Config::new()?;
+            let config = Config::new(".env")?;
 
             let db_handler = MongoDbHandler::new(
                 &config.db_user_name,
@@ -193,7 +193,7 @@ pub mod unit_tests_users_handler {
         }];
 
         async fn run_test(t: &TestCase) -> Result<()> {
-            let config = Config::new()?;
+            let config = Config::new(".env")?;
 
             let db_handler = MongoDbHandler::new(
                 &config.db_user_name,
@@ -298,7 +298,7 @@ pub mod unit_tests_users_handler {
         }];
 
         async fn run_test(t: &TestCase) -> Result<()> {
-            let config = Config::new()?;
+            let config = Config::new(".env")?;
 
             let db_handler = MongoDbHandler::new(
                 &config.db_user_name,

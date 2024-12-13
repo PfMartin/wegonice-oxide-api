@@ -12,7 +12,7 @@ use model::user::UserCreate;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let config = Config::new()?;
+    let config = Config::new(".env")?;
 
     let db_handler = MongoDbHandler::new(
         &config.db_name,

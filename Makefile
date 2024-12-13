@@ -16,4 +16,4 @@ db-connect-user:
 	${DOCKER_EXECUTE_STRING} "mongosh ${USER_WEGONICE_CONNECTION_STRING}"
 
 unit-tests:
-	cargo test -- --test-threads=1
+	cargo llvm-cov --workspace --ignore-filename-regex="test_utils|main" --all-features -- --test-threads=1
