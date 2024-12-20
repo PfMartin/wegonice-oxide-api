@@ -124,11 +124,10 @@ pub mod unit_tests_generic_handler {
                 for (idx, user) in got_users.iter().enumerate() {
                     assert_users_match(&t.title, &user, &test_users[idx]);
                 }
-            } else {
             }
         }
 
-        db_clean_up(&db_handler).await?;
+        db_clean_up().await?;
 
         Ok(())
     }
@@ -208,7 +207,7 @@ pub mod unit_tests_generic_handler {
             }
         }
 
-        db_clean_up(&db_handler).await?;
+        db_clean_up().await?;
 
         Ok(())
     }

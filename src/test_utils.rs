@@ -1,6 +1,6 @@
 use crate::{
     db::mongo_db_handler::MongoDbHandler,
-    model::user::{Role, User, UserMongoDb},
+    model::user::{Role, User, UserCreate, UserMongoDb},
 };
 use anyhow::{anyhow, Result};
 use bson::{doc, oid::ObjectId, DateTime};
@@ -89,8 +89,14 @@ pub async fn get_db_connection() -> Result<Database> {
 }
 
 #[cfg(test)]
-pub async fn db_clean_up(db_handler: &MongoDbHandler) -> Result<()> {
-    match db_handler.users_collection.delete_many(doc! {}).await {
+pub async fn db_clean_up() -> Result<()> {
+    let database = get_db_connection().await?;
+
+    match database
+        .collection::<UserMongoDb>("users")
+        .delete_many(doc! {})
+        .await
+    {
         Ok(_) => Ok(()),
         Err(error) => Err(anyhow!(
             "Failed to delete users in clean up step: {}",
@@ -109,6 +115,11 @@ pub fn get_random_string(length: usize) -> String {
 }
 
 #[cfg(test)]
+pub fn get_random_email() -> String {
+    format!("{}@{}.com", get_random_string(10), get_random_string(5))
+}
+
+#[cfg(test)]
 pub fn get_random_user_db(id: Option<ObjectId>) -> UserMongoDb {
     let user_id = match id {
         Some(object_id) => object_id,
@@ -117,11 +128,19 @@ pub fn get_random_user_db(id: Option<ObjectId>) -> UserMongoDb {
 
     UserMongoDb {
         _id: user_id,
-        email: get_random_string(10),
+        email: get_random_email(),
         password_hash: get_random_string(10),
         role: Role::User,
         is_activated: true,
         created_at: DateTime::now(),
         modified_at: DateTime::now(),
+    }
+}
+
+#[cfg(test)]
+pub fn get_random_user_create() -> UserCreate {
+    UserCreate {
+        email: get_random_email(),
+        password_hash: get_random_string(10),
     }
 }

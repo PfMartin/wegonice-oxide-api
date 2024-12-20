@@ -81,9 +81,10 @@ impl UserHandler for MongoDbHandler {
 pub mod unit_tests_users_handler {
     use crate::{
         config::Config,
+        model::user::UserMongoDb,
         test_utils::{
-            assert_date_is_current, db_clean_up, get_db_connection, get_random_user_db,
-            print_assert_failed,
+            assert_date_is_current, db_clean_up, get_db_connection, get_random_user_create,
+            get_random_user_db, print_assert_failed,
         },
     };
 
@@ -135,9 +136,9 @@ pub mod unit_tests_users_handler {
             );
             let inserted_id = insert_result?;
 
-            let db = get_db_connection().await?;
             let object_id = ObjectId::parse_str(&inserted_id)?;
 
+            let db = get_db_connection().await?;
             let user_db = db
                 .collection::<UserMongoDb>("users")
                 .find_one(doc! {"_id": object_id})
@@ -161,13 +162,12 @@ pub mod unit_tests_users_handler {
                 None => return Err(anyhow!("Failed to find user with object id: {object_id}")),
             }
 
-            db_clean_up(&db_handler).await?;
-
             Ok(())
         }
 
         for t in test_cases {
             run_test(&t).await?;
+            db_clean_up().await?;
         }
 
         Ok(())
@@ -215,12 +215,19 @@ pub mod unit_tests_users_handler {
             )
             .await?;
 
-            let inserted_id = db_handler
-                .create_user(get_random_user_db(None).into())
+            let users_collection = get_db_connection()
+                .await?
+                .collection::<UserMongoDb>("users");
+
+            let insert_result = users_collection
+                .insert_one(get_random_user_db(None))
                 .await?;
 
             let user_id = if t.is_success {
-                inserted_id
+                match insert_result.inserted_id {
+                    Bson::ObjectId(object_id) => object_id.to_hex(),
+                    _ => String::from("invalidId"),
+                }
             } else {
                 String::from("invalidId")
             };
@@ -234,13 +241,9 @@ pub mod unit_tests_users_handler {
                 return Ok(());
             }
 
-            let db = get_db_connection().await?;
             let object_id = ObjectId::parse_str(&user_id)?;
 
-            let user_db = db
-                .collection::<UserMongoDb>("users")
-                .find_one(doc! {"_id": object_id})
-                .await?;
+            let user_db = users_collection.find_one(doc! {"_id": object_id}).await?;
 
             match user_db {
                 Some(user) => {
@@ -292,13 +295,12 @@ pub mod unit_tests_users_handler {
                 None => return Err(anyhow!("Failed to find user with object id: {object_id}")),
             }
 
-            db_clean_up(&db_handler).await?;
-
             Ok(())
         }
 
         for t in test_cases {
             run_test(&t).await?;
+            db_clean_up().await?;
         }
 
         Ok(())
@@ -327,11 +329,25 @@ pub mod unit_tests_users_handler {
             )
             .await?;
 
-            let inserted_id = db_handler
-                .create_user(get_random_user_db(None).into())
+            // TODO: Create helper function for this
+            let users_collection = get_db_connection()
+                .await?
+                .collection::<UserMongoDb>("users");
+
+            let insert_result = users_collection
+                .insert_one(get_random_user_db(None))
                 .await?;
 
-            let delete_count = db_handler.delete_user_by_id(&inserted_id).await?;
+            let user_id = if t.is_success {
+                match insert_result.inserted_id {
+                    Bson::ObjectId(object_id) => object_id.to_hex(),
+                    _ => String::from("invalidId"),
+                }
+            } else {
+                String::from("invalidId")
+            };
+
+            let delete_count = db_handler.delete_user_by_id(&user_id).await?;
 
             if t.is_success {
                 let expected_delete_count = 1;
@@ -347,13 +363,12 @@ pub mod unit_tests_users_handler {
                 );
             }
 
-            db_clean_up(&db_handler).await?;
-
             Ok(())
         }
 
         for t in test_cases {
             run_test(&t).await?;
+            db_clean_up().await?;
         }
 
         Ok(())

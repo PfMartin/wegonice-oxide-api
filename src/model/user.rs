@@ -27,28 +27,6 @@ pub struct User {
     pub modified_at: DateTime,
 }
 
-impl Into<UserCreate> for UserMongoDb {
-    fn into(self) -> UserCreate {
-        UserCreate {
-            email: self.email,
-            password_hash: self.password_hash,
-        }
-    }
-}
-
-impl Into<User> for UserMongoDb {
-    fn into(self) -> User {
-        User {
-            id: self._id.to_hex(),
-            email: self.email,
-            role: self.role,
-            is_activated: self.is_activated,
-            created_at: self.created_at,
-            modified_at: self.modified_at,
-        }
-    }
-}
-
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UserCreate {
@@ -63,4 +41,26 @@ pub struct UserPatch {
     pub password_hash: Option<String>,
     pub role: Option<Role>,
     pub is_activated: Option<bool>,
+}
+
+// impl Into<UserCreate> for UserMongoDb {
+//     fn into(self) -> UserCreate {
+//         UserCreate {
+//             email: self.email,
+//             password_hash: self.password_hash,
+//         }
+//     }
+// }
+
+impl Into<User> for UserMongoDb {
+    fn into(self) -> User {
+        User {
+            id: self._id.to_hex(),
+            email: self.email,
+            role: self.role,
+            is_activated: self.is_activated,
+            created_at: self.created_at,
+            modified_at: self.modified_at,
+        }
+    }
 }
