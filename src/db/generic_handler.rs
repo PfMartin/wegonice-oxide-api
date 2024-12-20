@@ -44,7 +44,7 @@ impl GenericHandler for MongoDbHandler {
         let find_result = self
             .db
             .collection::<T>(collection_name)
-            .find_one(doc! {"id": object_id})
+            .find_one(doc! {"_id": object_id})
             .await?;
 
         match find_result {
@@ -61,7 +61,7 @@ pub mod unit_tests_generic_handler {
     use super::*;
     use crate::{
         config::Config,
-        model::user::{User, UserDb},
+        model::user::{User, UserMongoDb},
         test_utils::{
             assert_date_is_current, assert_users_match, db_clean_up, get_db_connection,
             get_random_user_db, print_assert_failed,
@@ -74,7 +74,7 @@ pub mod unit_tests_generic_handler {
     async fn get_multiple_users() -> Result<()> {
         struct TestCase {
             title: String,
-            test_users_db: Vec<UserDb>,
+            test_users_db: Vec<UserMongoDb>,
             is_success: bool,
         }
 
@@ -98,11 +98,13 @@ pub mod unit_tests_generic_handler {
             let db = get_db_connection().await?;
             let cloned_db_users = t.test_users_db.clone();
 
-            db.collection::<UserDb>("users")
+            db.collection::<UserMongoDb>("users")
                 .insert_many(t.test_users_db)
                 .await?;
 
-            let mut got_users = db_handler.get_multiple::<UserDb, User>("users").await?;
+            let mut got_users = db_handler
+                .get_multiple::<UserMongoDb, User>("users")
+                .await?;
             got_users.sort_by_key(|user| user.email.clone());
 
             if t.is_success {
@@ -135,7 +137,7 @@ pub mod unit_tests_generic_handler {
     async fn get_user_by_id() -> Result<()> {
         struct TestCase {
             title: String,
-            test_users: Vec<UserDb>,
+            test_users: Vec<UserMongoDb>,
             test_id: Option<String>,
             is_success: bool,
         }
@@ -169,7 +171,7 @@ pub mod unit_tests_generic_handler {
             let db = get_db_connection().await?;
 
             let users_to_insert = t.test_users.clone();
-            db.collection::<UserDb>("users")
+            db.collection::<UserMongoDb>("users")
                 .insert_many(users_to_insert)
                 .await?;
 
@@ -181,13 +183,12 @@ pub mod unit_tests_generic_handler {
             let user_to_find: User = db_user_to_find.clone().into();
             let id = match t.test_id {
                 Some(id) => id,
-                None => match db_user_to_find.id {
-                    Some(i) => i.to_hex(),
-                    None => "wrong".into(),
-                },
+                None => db_user_to_find._id.to_hex(),
             };
 
-            let get_result = db_handler.get_by_id::<UserDb, User>(&id, "users").await;
+            let get_result = db_handler
+                .get_by_id::<UserMongoDb, User>(&id, "users")
+                .await;
 
             if t.is_success {
                 let got_user = get_result?;
@@ -211,21 +212,4 @@ pub mod unit_tests_generic_handler {
 
         Ok(())
     }
-
-    // #[test]
-    // async fn fails_to_get_user_by_id() -> Result<()> {
-    //     mock! {
-    //         pub Collection<T> {
-    //             fn find_one(&self, filter: mongodb::bson::Document) -> Result<Option<T>, MongoError>
-    //             where
-    //                 T: DeserializeOwned + 'static;
-    //         }
-
-    //         trait Clone {
-    //             fn clone(&self) -> Self;
-    //         }
-    //     }
-
-    //     Ok(())
-    // }
 }

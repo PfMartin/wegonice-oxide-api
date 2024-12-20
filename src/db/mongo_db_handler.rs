@@ -1,10 +1,10 @@
-use crate::model::user::UserDb;
+use crate::model::user::UserMongoDb;
 use anyhow::Result;
 
 use mongodb::{options::ClientOptions, Client, Collection, Database};
 
 pub struct MongoDbHandler {
-    pub users_collection: Collection<UserDb>,
+    pub users_collection: Collection<UserMongoDb>,
     pub db: Database,
 }
 

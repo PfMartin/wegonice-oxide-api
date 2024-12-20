@@ -1,6 +1,6 @@
 use crate::{
     db::mongo_db_handler::MongoDbHandler,
-    model::user::{Role, User, UserDb},
+    model::user::{Role, User, UserMongoDb},
 };
 use anyhow::{anyhow, Result};
 use bson::{doc, oid::ObjectId, DateTime};
@@ -109,14 +109,14 @@ pub fn get_random_string(length: usize) -> String {
 }
 
 #[cfg(test)]
-pub fn get_random_user_db(id: Option<ObjectId>) -> UserDb {
+pub fn get_random_user_db(id: Option<ObjectId>) -> UserMongoDb {
     let user_id = match id {
         Some(object_id) => object_id,
         None => ObjectId::new(),
     };
 
-    UserDb {
-        id: Some(user_id),
+    UserMongoDb {
+        _id: user_id,
         email: get_random_string(10),
         password_hash: get_random_string(10),
         role: Role::User,

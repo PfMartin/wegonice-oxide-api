@@ -1,6 +1,6 @@
 use super::mongo_db_handler::MongoDbHandler;
 
-use crate::model::user::{Role, UserCreate, UserDb, UserPatch};
+use crate::model::user::{Role, UserCreate, UserMongoDb, UserPatch};
 use anyhow::{anyhow, Result};
 use bson::{doc, oid::ObjectId, to_bson, Bson, DateTime};
 
@@ -12,8 +12,8 @@ pub trait UserHandler {
 
 impl UserHandler for MongoDbHandler {
     async fn create_user(&self, user: UserCreate) -> Result<String> {
-        let user_db = UserDb {
-            id: None,
+        let user_db = UserMongoDb {
+            _id: ObjectId::new(),
             email: user.email,
             password_hash: user.password_hash,
             role: Role::User,
@@ -139,7 +139,7 @@ pub mod unit_tests_users_handler {
             let object_id = ObjectId::parse_str(&inserted_id)?;
 
             let user_db = db
-                .collection::<UserDb>("users")
+                .collection::<UserMongoDb>("users")
                 .find_one(doc! {"_id": object_id})
                 .await?;
 
@@ -238,7 +238,7 @@ pub mod unit_tests_users_handler {
             let object_id = ObjectId::parse_str(&user_id)?;
 
             let user_db = db
-                .collection::<UserDb>("users")
+                .collection::<UserMongoDb>("users")
                 .find_one(doc! {"_id": object_id})
                 .await?;
 

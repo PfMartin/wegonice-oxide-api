@@ -19,3 +19,16 @@ make db-create-user
 make db-connect-admin
 make db-connect-user
 ```
+
+## Testing
+
+### Unit tests
+
+Run unit tests with coverage using the following command.
+
+```bash
+make unit-tests
+```
+
+## TODOs
+

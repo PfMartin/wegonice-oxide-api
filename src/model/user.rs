@@ -8,8 +8,8 @@ pub enum Role {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct UserDb {
-    pub id: Option<ObjectId>,
+pub struct UserMongoDb {
+    pub _id: ObjectId,
     pub email: String,
     pub password_hash: String,
     pub role: Role,
@@ -27,7 +27,7 @@ pub struct User {
     pub modified_at: DateTime,
 }
 
-impl Into<UserCreate> for UserDb {
+impl Into<UserCreate> for UserMongoDb {
     fn into(self) -> UserCreate {
         UserCreate {
             email: self.email,
@@ -36,15 +36,10 @@ impl Into<UserCreate> for UserDb {
     }
 }
 
-impl Into<User> for UserDb {
+impl Into<User> for UserMongoDb {
     fn into(self) -> User {
-        let id = match self.id {
-            Some(value) => value.to_hex(),
-            None => String::from(""),
-        };
-
         User {
-            id,
+            id: self._id.to_hex(),
             email: self.email,
             role: self.role,
             is_activated: self.is_activated,
