@@ -18,6 +18,7 @@ pub struct UserMongoDb {
     pub modified_at: DateTime,
 }
 
+#[derive(Serialize, Deserialize, Clone)]
 pub struct User {
     pub id: String,
     pub email: String,

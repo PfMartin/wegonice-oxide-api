@@ -203,11 +203,11 @@ pub mod unit_tests_generic_handler {
                 assert_date_is_current(got_user.created_at, &t.title)?;
                 assert_date_is_current(got_user.modified_at, &t.title)?;
             } else {
-                assert!(get_result.is_err())
+                assert!(get_result.is_err());
             }
-        }
 
-        db_clean_up().await?;
+            db_clean_up().await?;
+        }
 
         Ok(())
     }

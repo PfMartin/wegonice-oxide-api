@@ -1,11 +1,12 @@
 use super::mongo_db_handler::MongoDbHandler;
 
-use crate::model::user::{Role, UserCreate, UserMongoDb, UserPatch};
+use crate::model::user::{Role, User, UserCreate, UserMongoDb, UserPatch};
 use anyhow::{anyhow, Result};
 use bson::{doc, oid::ObjectId, to_bson, Bson, DateTime};
 
 pub trait UserHandler {
     async fn create_user(&self, user: UserCreate) -> Result<String>;
+    async fn get_user_by_email(&self, email: &str) -> Result<User>;
     async fn patch_user_by_id(&self, id: &str, user_patch: UserPatch) -> Result<()>;
     async fn delete_user_by_id(&self, id: &str) -> Result<u64>;
 }
@@ -30,6 +31,17 @@ impl UserHandler for MongoDbHandler {
                 "Failed to convert inserted Id to string, {}",
                 insert_result.inserted_id.to_string()
             )),
+        }
+    }
+
+    async fn get_user_by_email(&self, email: &str) -> Result<User> {
+        let filter = doc! {"email": email};
+
+        let find_result = self.users_collection.find_one(filter).await?;
+
+        match find_result {
+            Some(user) => Ok(user.into()),
+            None => Err(anyhow!("Failed to find user with email {}", email)),
         }
     }
 
@@ -83,8 +95,8 @@ pub mod unit_tests_users_handler {
         config::Config,
         model::user::UserMongoDb,
         test_utils::{
-            assert_date_is_current, db_clean_up, get_db_connection, get_random_user_create,
-            get_random_user_db, print_assert_failed,
+            assert_date_is_current, assert_users_match, db_clean_up, get_db_connection,
+            get_random_user_create, get_random_user_db, print_assert_failed,
         },
     };
 
@@ -167,6 +179,76 @@ pub mod unit_tests_users_handler {
 
         for t in test_cases {
             run_test(&t).await?;
+            db_clean_up().await?;
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    async fn get_user_by_email() -> Result<()> {
+        struct TestCase {
+            title: String,
+            test_users: Vec<UserMongoDb>,
+            test_email: Option<String>,
+            is_success: bool,
+        };
+
+        let test_cases = vec![
+            TestCase {
+                title: "Successfully finds user by email".into(),
+                test_users: vec![get_random_user_db(None), get_random_user_db(None)],
+                test_email: None,
+                is_success: true,
+            },
+            TestCase {
+                title: "Fails to find user by email with non-existing email".into(),
+                test_users: vec![get_random_user_db(None), get_random_user_db(None)],
+                test_email: Some("non-existing".into()),
+                is_success: false,
+            },
+        ];
+
+        let config = Config::new(".env")?;
+        let db_handler = MongoDbHandler::new(
+            &config.db_user_name,
+            &config.db_user_password,
+            &config.db_name,
+            &config.db_host,
+        )
+        .await?;
+
+        for t in test_cases {
+            let db = get_db_connection().await?;
+            let users_to_insert = t.test_users.clone();
+            db.collection::<UserMongoDb>("users")
+                .insert_many(users_to_insert)
+                .await?;
+
+            let db_user_to_find = match t.test_users.get(0) {
+                Some(u) => u,
+                None => return Err(anyhow!("Failed to get first user from test users")),
+            };
+
+            let user_to_find: User = db_user_to_find.clone().into();
+
+            let email = match t.test_email {
+                Some(e) => e,
+                None => user_to_find.clone().email,
+            };
+
+            let get_result = db_handler.get_user_by_email(&email).await;
+
+            if t.is_success {
+                let got_user = get_result?;
+
+                assert_users_match(&t.title, &got_user, &user_to_find);
+                assert_date_is_current(got_user.created_at, &t.title)?;
+                assert_date_is_current(got_user.modified_at, &t.title)?;
+            } else {
+                assert!(get_result.is_err());
+            }
+
             db_clean_up().await?;
         }
 
