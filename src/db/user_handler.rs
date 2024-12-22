@@ -56,8 +56,7 @@ impl UserHandler for MongoDbHandler {
             update_doc.insert("password_hash", password_hash);
         }
         if let Some(role) = user_patch.role {
-            // Serialize the enum to BSON
-            let role_bson: Bson = to_bson(&role).map_err(|e| mongodb::error::Error::from(e))?;
+            let role_bson: Bson = to_bson(&role)?;
             update_doc.insert("role", role_bson);
         }
 
@@ -96,7 +95,7 @@ pub mod unit_tests_users_handler {
         model::user::UserMongoDb,
         test_utils::{
             assert_date_is_current, assert_users_match, db_clean_up, get_db_connection,
-            get_random_user_create, get_random_user_db, print_assert_failed,
+            get_random_user_db, print_assert_failed,
         },
     };
 
@@ -192,7 +191,7 @@ pub mod unit_tests_users_handler {
             test_users: Vec<UserMongoDb>,
             test_email: Option<String>,
             is_success: bool,
-        };
+        }
 
         let test_cases = vec![
             TestCase {

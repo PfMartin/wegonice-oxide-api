@@ -19,6 +19,7 @@ pub struct UserMongoDb {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct User {
     pub id: String,
     pub email: String,
@@ -44,24 +45,92 @@ pub struct UserPatch {
     pub is_activated: Option<bool>,
 }
 
-// impl Into<UserCreate> for UserMongoDb {
-//     fn into(self) -> UserCreate {
-//         UserCreate {
-//             email: self.email,
-//             password_hash: self.password_hash,
-//         }
-//     }
-// }
-
-impl Into<User> for UserMongoDb {
-    fn into(self) -> User {
+impl From<UserMongoDb> for User {
+    fn from(user_mongo_db: UserMongoDb) -> Self {
         User {
-            id: self._id.to_hex(),
-            email: self.email,
-            role: self.role,
-            is_activated: self.is_activated,
-            created_at: self.created_at,
-            modified_at: self.modified_at,
+            id: user_mongo_db._id.to_hex(),
+            email: user_mongo_db.email,
+            role: user_mongo_db.role,
+            is_activated: user_mongo_db.is_activated,
+            created_at: user_mongo_db.created_at,
+            modified_at: user_mongo_db.modified_at,
+        }
+    }
+}
+
+#[cfg(test)]
+mod unit_tests_user_model {
+    use crate::test_utils::{get_random_user_db, print_assert_failed};
+
+    use super::*;
+
+    #[test]
+    fn user_mongo_db_into_user() {
+        struct TestCase {
+            title: String,
+        }
+
+        let test_cases = vec![TestCase {
+            title: "Successfully converts an UserMongoDb into an User".into(),
+        }];
+
+        for t in test_cases {
+            let user_db = get_random_user_db(None);
+            let cloned_user_db = user_db.clone();
+            let user: User = user_db.into();
+
+            assert_eq!(
+                cloned_user_db._id.to_hex(),
+                user.id,
+                "{}",
+                print_assert_failed(&t.title, &cloned_user_db._id.to_hex(), &user.id)
+            );
+            assert_eq!(
+                cloned_user_db.email,
+                user.email,
+                "{}",
+                print_assert_failed(&t.title, &cloned_user_db.email, &user.email)
+            );
+            assert_eq!(
+                cloned_user_db.role,
+                user.role,
+                "{}",
+                print_assert_failed(
+                    &t.title,
+                    &format!("{:?}", cloned_user_db.role),
+                    &format!("{:?}", &user.role)
+                )
+            );
+            assert_eq!(
+                cloned_user_db.is_activated,
+                user.is_activated,
+                "{}",
+                print_assert_failed(
+                    &t.title,
+                    &format!("{:?}", cloned_user_db.is_activated),
+                    &format!("{:?}", &user.is_activated)
+                )
+            );
+            assert_eq!(
+                cloned_user_db.created_at,
+                user.created_at,
+                "{}",
+                print_assert_failed(
+                    &t.title,
+                    &format!("{}", cloned_user_db.created_at),
+                    &format!("{}", user.created_at)
+                )
+            );
+            assert_eq!(
+                cloned_user_db.modified_at,
+                user.modified_at,
+                "{}",
+                print_assert_failed(
+                    &t.title,
+                    &format!("{}", cloned_user_db.modified_at),
+                    &format!("{}", user.modified_at)
+                )
+            );
         }
     }
 }

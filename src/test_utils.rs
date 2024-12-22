@@ -1,7 +1,4 @@
-use crate::{
-    db::mongo_db_handler::MongoDbHandler,
-    model::user::{Role, User, UserCreate, UserMongoDb},
-};
+use crate::model::user::{Role, User, UserMongoDb};
 use anyhow::{anyhow, Result};
 use bson::{doc, oid::ObjectId, DateTime};
 use dotenv::dotenv;
@@ -134,13 +131,5 @@ pub fn get_random_user_db(id: Option<ObjectId>) -> UserMongoDb {
         is_activated: true,
         created_at: DateTime::now(),
         modified_at: DateTime::now(),
-    }
-}
-
-#[cfg(test)]
-pub fn get_random_user_create() -> UserCreate {
-    UserCreate {
-        email: get_random_email(),
-        password_hash: get_random_string(10),
     }
 }
