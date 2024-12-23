@@ -66,7 +66,12 @@ jobs:
       - name: Install llvm-cov
         run: cargo install cargo-llvm-cov
       - name: Run tests
-        run: cargo llvm-cov --workspace --ignore-filename-regex="test_utils|main" --all-features -- --test-threads=1 --nocapture
+        run: |
+          export MONGO_WEGONICE_DB=${{env.MONGO_WEGONICE_DB}}
+          export MONGO_WEGONICE_USER=${{env.MONGO_WEGONICE_USER}}
+          export MONGO_WEGONICE_PASSWORD=${{env.MONGO_WEGONICE_PASSWORD}}
+          export MONGO_WEGONICE_HOST=${{env.MONGO_WEGONICE_HOST}}
+          make unit-tests
 
   build-binary:
     name: build-binary
