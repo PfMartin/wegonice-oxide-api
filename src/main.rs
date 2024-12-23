@@ -7,8 +7,10 @@ mod test_utils;
 
 use anyhow::{Error, Result};
 use config::Config;
-use db::{mongo_db_handler::MongoDbHandler, user_handler::UserHandler};
-use model::user::UserCreate;
+use db::{
+    generic_handler::GenericHandler, mongo_db_handler::MongoDbHandler, user_handler::UserHandler,
+};
+use model::user::{User, UserCreate, UserMongoDb, UserPatch};
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -28,6 +30,28 @@ async fn main() -> Result<(), Error> {
             password_hash: String::from("hello"),
         })
         .await?;
+
+    db_handler
+        .get_multiple::<UserMongoDb, User>("users")
+        .await?;
+
+    db_handler
+        .get_by_id::<UserMongoDb, User>("1", "users")
+        .await?;
+
+    db_handler.get_user_by_email("test").await?;
+    db_handler
+        .patch_user_by_id(
+            "id",
+            UserPatch {
+                email: None,
+                password_hash: None,
+                role: None,
+                is_activated: None,
+            },
+        )
+        .await?;
+    db_handler.delete_user_by_id("test").await?;
 
     Ok(())
 }
