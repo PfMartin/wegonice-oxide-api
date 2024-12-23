@@ -67,13 +67,20 @@ pub fn assert_users_match(title: &str, user_1: &User, user_2: &User) {
 }
 
 #[cfg(test)]
-pub async fn get_db_connection() -> Result<Database> {
+pub fn get_db_config() -> Result<(String, String, String, String)> {
     dotenv()?;
 
     let db_name = env::var("MONGO_WEGONICE_DB")?;
     let db_user_name = env::var("MONGO_WEGONICE_USER")?;
     let db_user_password = env::var("MONGO_WEGONICE_PASSWORD")?;
     let db_host = env::var("MONGO_WEGONICE_HOST")?;
+
+    Ok((db_name, db_user_name, db_user_password, db_host))
+}
+
+#[cfg(test)]
+pub async fn get_db_connection() -> Result<Database> {
+    let (db_name, db_user_name, db_user_password, db_host) = get_db_config()?;
 
     println!("GET DB CONNECTION: {db_name}, {db_user_name}, {db_user_password}, {db_host}");
 
