@@ -40,6 +40,7 @@ jobs:
   unit-tests:
     name: unit-tests
     runs-on: ubuntu-latest
+    needs: clippy-check
     services:
       wegonice-test-db:
         image: mongo:8
@@ -68,6 +69,7 @@ jobs:
   build-binary:
     name: build-binary
     runs-on: ubuntu-latest
+    needs: unit-tests
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
