@@ -36,7 +36,7 @@ impl Config {
 
 #[cfg(test)]
 pub mod unit_tests_config {
-    use std::fs;
+    use std::{collections::HashMap, fs};
 
     use super::*;
     use crate::test_utils::print_assert_failed;
@@ -92,7 +92,7 @@ pub mod unit_tests_config {
         ];
 
         for t in test_cases {
-            clear_env_vars();
+            let saved_vars = clear_env_vars()?;
 
             if let Some(content) = &t.setup_env_file {
                 fs::write(&t.env_file_path, content)?
@@ -138,15 +138,44 @@ pub mod unit_tests_config {
             if t.setup_env_file.is_some() {
                 fs::remove_file(&t.env_file_path)?;
             }
+
+            restore_env_vars(saved_vars);
         }
 
         Ok(())
     }
 
-    fn clear_env_vars() {
+    fn clear_env_vars() -> Result<HashMap<String, String>> {
+        let mut saved_vars = HashMap::new();
+
+        saved_vars.insert(
+            String::from("MONGO_WEGONICE_DB"),
+            env::var("MONGO_WEGONICE_DB")?,
+        );
+        saved_vars.insert(
+            String::from("MONGO_WEGONICE_USER"),
+            env::var("MONGO_WEGONICE_USER")?,
+        );
+        saved_vars.insert(
+            String::from("MONGO_WEGONICE_PASSWORD"),
+            env::var("MONGO_WEGONICE_PASSWORD")?,
+        );
+        saved_vars.insert(
+            String::from("MONGO_WEGONICE_HOST"),
+            env::var("MONGO_WEGONICE_HOST")?,
+        );
+
         env::remove_var("MONGO_WEGONICE_DB");
         env::remove_var("MONGO_WEGONICE_USER");
         env::remove_var("MONGO_WEGONICE_PASSWORD");
         env::remove_var("MONGO_WEGONICE_HOST");
+
+        Ok(saved_vars)
+    }
+
+    fn restore_env_vars(saved_vars: HashMap<String, String>) {
+        for (key, value) in saved_vars {
+            env::set_var(key, value);
+        }
     }
 }

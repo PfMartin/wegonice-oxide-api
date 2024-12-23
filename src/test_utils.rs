@@ -88,8 +88,6 @@ pub fn get_db_config(config_path: Option<&str>) -> Result<(String, String, Strin
 pub async fn get_db_connection() -> Result<Database> {
     let (db_name, db_user_name, db_user_password, db_host) = get_db_config(Some(".env"))?;
 
-    println!("GET DB CONNECTION: {db_name}, {db_user_name}, {db_user_password}, {db_host}");
-
     let uri = format!(
         "mongodb://{db_user_name}:{db_user_password}@{db_host}/{db_name}?authSource={db_name}"
     );
