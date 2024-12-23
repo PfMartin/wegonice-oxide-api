@@ -75,6 +75,8 @@ pub async fn get_db_connection() -> Result<Database> {
     let db_user_password = env::var("MONGO_WEGONICE_PASSWORD")?;
     let db_host = env::var("MONGO_WEGONICE_HOST")?;
 
+    println!("GET DB CONNECTION: {db_name}, {db_user_name}, {db_user_password}, {db_host}");
+
     let uri = format!(
         "mongodb://{db_user_name}:{db_user_password}@{db_host}/{db_name}?authSource={db_name}"
     );

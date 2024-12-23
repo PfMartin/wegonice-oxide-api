@@ -14,6 +14,8 @@ impl MongoDbHandler {
         let client_options = ClientOptions::parse(uri).await?;
         let client = Client::with_options(client_options)?;
 
+        println!("MONGO_DB_HANDLER: {db_name}, {user}, {password}, {db_host}");
+
         let db = client.database(db_name);
         let users_collection = db.collection("users");
 
