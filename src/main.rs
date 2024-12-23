@@ -14,7 +14,7 @@ use model::user::{User, UserCreate, UserMongoDb, UserPatch};
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let config = Config::new(".env")?;
+    let config = Config::new(Some(".env"))?;
 
     let db_handler = MongoDbHandler::new(
         &config.db_name,

@@ -10,8 +10,11 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(config_path: &str) -> Result<Config> {
-        dotenv::from_path(config_path)?;
+    pub fn new(config_path: Option<&str>) -> Result<Config> {
+        match config_path {
+            Some(path) => dotenv::from_path(path)?,
+            None => println!("Using config from env variables"),
+        }
 
         let db_name = env::var("MONGO_WEGONICE_DB")?;
         let db_user_name = env::var("MONGO_WEGONICE_USER")?;
@@ -64,7 +67,7 @@ pub mod unit_tests_config {
                 ),
             },
             TestCase {
-                title: "Fails to get config due to non-existing env file path".into(),
+                title: "Fails to get config due to non-existing env and env variables not set file path".into(),
                 expected_config: None,
                 env_file_path: "src/non-existing".into(),
                 setup_env_file: None,
@@ -91,7 +94,7 @@ pub mod unit_tests_config {
                 fs::write(&t.env_file_path, content)?
             }
 
-            let config = Config::new(&t.env_file_path);
+            let config = Config::new(Some(&t.env_file_path));
 
             match t.expected_config {
                 Some(expected_config) => {

@@ -83,7 +83,7 @@ pub mod unit_tests_generic_handler {
             is_success: true,
         }];
 
-        let (db_name, db_user_name, db_user_password, db_host) = get_db_config()?;
+        let (db_name, db_user_name, db_user_password, db_host) = get_db_config(Some(".env"))?;
 
         let db_handler =
             MongoDbHandler::new(&db_user_name, &db_user_password, &db_name, &db_host).await?;
@@ -150,7 +150,7 @@ pub mod unit_tests_generic_handler {
             },
         ];
 
-        let (db_name, db_user_name, db_user_password, db_host) = get_db_config()?;
+        let (db_name, db_user_name, db_user_password, db_host) = get_db_config(Some(".env"))?;
         let db_handler =
             MongoDbHandler::new(&db_user_name, &db_user_password, &db_name, &db_host).await?;
 
