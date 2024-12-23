@@ -12,7 +12,11 @@ pub struct Config {
 impl Config {
     pub fn new(config_path: Option<&str>) -> Result<Config> {
         match config_path {
-            Some(path) => dotenv::from_path(path)?,
+            Some(path) => {
+                if dotenv::from_path(path).is_err() {
+                    println!("Using config from env variables");
+                };
+            }
             None => println!("Using config from env variables"),
         }
 

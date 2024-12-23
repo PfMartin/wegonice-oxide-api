@@ -68,7 +68,11 @@ pub fn assert_users_match(title: &str, user_1: &User, user_2: &User) {
 #[cfg(test)]
 pub fn get_db_config(config_path: Option<&str>) -> Result<(String, String, String, String)> {
     match config_path {
-        Some(path) => dotenv::from_path(path)?,
+        Some(path) => {
+            if dotenv::from_path(path).is_err() {
+                println!("Using config from env variables");
+            };
+        }
         None => println!("Using config from env variables"),
     }
 
