@@ -1,11 +1,12 @@
-name: unit-tests
+name: Test and Build
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches: '*'
-  pull_request:
-    types: 
-      - opened
+    tags: '*'
 
 env:
   MONGO_INITDB_ROOT_USERNAME: admin
@@ -15,12 +16,30 @@ env:
   MONGO_WEGONICE_USER: niceUser
   MONGO_WEGONICE_PASSWORD: nicePassword
   MONGO_WEGONICE_HOST: 127.0.0.1:27017
+  CARGO_TERM_COLOR: always
 
 jobs:
+  format-check:
+    name: code-format-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Format check
+        run: make fmt-check
+
+  clippy-check:
+    name: clippy-check
+    runs-on: ubuntu-latest
+    steps:  
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Clippy check
+        run: make clippy-check
+
   unit-tests:
     name: unit-tests
     runs-on: ubuntu-latest
-
     services:
       wegonice-test-db:
         image: mongo:8
@@ -36,17 +55,21 @@ jobs:
           --health-timeout 10s
           --health-retries 5
           --name wegonice-test-db
-
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-
       - name: Setup db user for tests
         run: docker exec wegonice-test-db mongosh ${{env.MONGO_WEGONICE_DB}} -u ${{env.MONGO_INITDB_ROOT_USERNAME}} -p ${{env.MONGO_INITDB_ROOT_PASSWORD}} --authenticationDatabase ${{env.MONGO_INITDB_DATABASE}} --eval "db.createUser({user:'${{env.MONGO_WEGONICE_USER}}', pwd:'${{env.MONGO_WEGONICE_PASSWORD}}', roles:[{role:'readWrite', db:'${{env.MONGO_WEGONICE_DB}}'}]})"
-
       - name: Install llvm-cov
         run: cargo install cargo-llvm-cov
-
       - name: Run tests
         run: make unit-tests
 
+  build-binary:
+    name: build-binary
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: build
+        run: cargo build
