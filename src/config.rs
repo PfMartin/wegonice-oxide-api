@@ -10,8 +10,15 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(config_path: &str) -> Result<Config> {
-        dotenv::from_path(config_path)?;
+    pub fn new(config_path: Option<&str>) -> Result<Config> {
+        match config_path {
+            Some(path) => {
+                if dotenv::from_path(path).is_err() {
+                    println!("Using config from env variables");
+                };
+            }
+            None => println!("Using config from env variables"),
+        }
 
         let db_name = env::var("MONGO_WEGONICE_DB")?;
         let db_user_name = env::var("MONGO_WEGONICE_USER")?;
@@ -29,7 +36,7 @@ impl Config {
 
 #[cfg(test)]
 pub mod unit_tests_config {
-    use std::fs;
+    use std::{collections::HashMap, fs};
 
     use super::*;
     use crate::test_utils::print_assert_failed;
@@ -64,7 +71,7 @@ pub mod unit_tests_config {
                 ),
             },
             TestCase {
-                title: "Fails to get config due to non-existing env file path".into(),
+                title: "Fails to get config due to non-existing env and env variables not set file path".into(),
                 expected_config: None,
                 env_file_path: "src/non-existing".into(),
                 setup_env_file: None,
@@ -85,13 +92,13 @@ pub mod unit_tests_config {
         ];
 
         for t in test_cases {
-            clear_env_vars();
+            let saved_vars = clear_env_vars()?;
 
             if let Some(content) = &t.setup_env_file {
                 fs::write(&t.env_file_path, content)?
             }
 
-            let config = Config::new(&t.env_file_path);
+            let config = Config::new(Some(&t.env_file_path));
 
             match t.expected_config {
                 Some(expected_config) => {
@@ -131,15 +138,44 @@ pub mod unit_tests_config {
             if t.setup_env_file.is_some() {
                 fs::remove_file(&t.env_file_path)?;
             }
+
+            restore_env_vars(saved_vars);
         }
 
         Ok(())
     }
 
-    fn clear_env_vars() {
+    fn clear_env_vars() -> Result<HashMap<String, String>> {
+        let mut saved_vars = HashMap::new();
+
+        saved_vars.insert(
+            String::from("MONGO_WEGONICE_DB"),
+            env::var("MONGO_WEGONICE_DB")?,
+        );
+        saved_vars.insert(
+            String::from("MONGO_WEGONICE_USER"),
+            env::var("MONGO_WEGONICE_USER")?,
+        );
+        saved_vars.insert(
+            String::from("MONGO_WEGONICE_PASSWORD"),
+            env::var("MONGO_WEGONICE_PASSWORD")?,
+        );
+        saved_vars.insert(
+            String::from("MONGO_WEGONICE_HOST"),
+            env::var("MONGO_WEGONICE_HOST")?,
+        );
+
         env::remove_var("MONGO_WEGONICE_DB");
         env::remove_var("MONGO_WEGONICE_USER");
         env::remove_var("MONGO_WEGONICE_PASSWORD");
         env::remove_var("MONGO_WEGONICE_HOST");
+
+        Ok(saved_vars)
+    }
+
+    fn restore_env_vars(saved_vars: HashMap<String, String>) {
+        for (key, value) in saved_vars {
+            env::set_var(key, value);
+        }
     }
 }

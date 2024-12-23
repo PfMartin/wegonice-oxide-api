@@ -91,11 +91,10 @@ impl UserHandler for MongoDbHandler {
 #[cfg(test)]
 pub mod unit_tests_users_handler {
     use crate::{
-        config::Config,
         model::user::UserMongoDb,
         test_utils::{
-            assert_date_is_current, assert_users_match, db_clean_up, get_db_connection,
-            get_random_user_db, print_assert_failed,
+            assert_date_is_current, assert_users_match, db_clean_up, get_db_config,
+            get_db_connection, get_random_user_db, print_assert_failed,
         },
     };
 
@@ -124,15 +123,9 @@ pub mod unit_tests_users_handler {
         }];
 
         async fn run_test(t: &TestCase) -> Result<()> {
-            let config = Config::new(".env")?;
-
-            let db_handler = MongoDbHandler::new(
-                &config.db_user_name,
-                &config.db_user_password,
-                &config.db_name,
-                &config.db_host,
-            )
-            .await?;
+            let (db_name, db_user_name, db_user_password, db_host) = get_db_config(Some(".env"))?;
+            let db_handler =
+                MongoDbHandler::new(&db_user_name, &db_user_password, &db_name, &db_host).await?;
 
             let insert_result = db_handler.create_user(t.test_user.clone()).await;
             assert_eq!(
@@ -208,14 +201,9 @@ pub mod unit_tests_users_handler {
             },
         ];
 
-        let config = Config::new(".env")?;
-        let db_handler = MongoDbHandler::new(
-            &config.db_user_name,
-            &config.db_user_password,
-            &config.db_name,
-            &config.db_host,
-        )
-        .await?;
+        let (db_name, db_user_name, db_user_password, db_host) = get_db_config(Some(".env"))?;
+        let db_handler =
+            MongoDbHandler::new(&db_user_name, &db_user_password, &db_name, &db_host).await?;
 
         for t in test_cases {
             let db = get_db_connection().await?;
@@ -286,15 +274,9 @@ pub mod unit_tests_users_handler {
         ];
 
         async fn run_test(t: &TestCase) -> Result<()> {
-            let config = Config::new(".env")?;
-
-            let db_handler = MongoDbHandler::new(
-                &config.db_user_name,
-                &config.db_user_password,
-                &config.db_name,
-                &config.db_host,
-            )
-            .await?;
+            let (db_name, db_user_name, db_user_password, db_host) = get_db_config(Some(".env"))?;
+            let db_handler =
+                MongoDbHandler::new(&db_user_name, &db_user_password, &db_name, &db_host).await?;
 
             let users_collection = get_db_connection()
                 .await?
@@ -400,15 +382,9 @@ pub mod unit_tests_users_handler {
         }];
 
         async fn run_test(t: &TestCase) -> Result<()> {
-            let config = Config::new(".env")?;
-
-            let db_handler = MongoDbHandler::new(
-                &config.db_user_name,
-                &config.db_user_password,
-                &config.db_name,
-                &config.db_host,
-            )
-            .await?;
+            let (db_name, db_user_name, db_user_password, db_host) = get_db_config(Some(".env"))?;
+            let db_handler =
+                MongoDbHandler::new(&db_user_name, &db_user_password, &db_name, &db_host).await?;
 
             // TODO: Create helper function for this
             let users_collection = get_db_connection()

@@ -1,7 +1,6 @@
 use crate::model::user::{Role, User, UserMongoDb};
 use anyhow::{anyhow, Result};
 use bson::{doc, oid::ObjectId, DateTime};
-use dotenv::dotenv;
 use mongodb::{options::ClientOptions, Client, Database};
 use rand::{distributions::Alphanumeric, Rng};
 use std::env;
@@ -67,13 +66,27 @@ pub fn assert_users_match(title: &str, user_1: &User, user_2: &User) {
 }
 
 #[cfg(test)]
-pub async fn get_db_connection() -> Result<Database> {
-    dotenv()?;
+pub fn get_db_config(config_path: Option<&str>) -> Result<(String, String, String, String)> {
+    match config_path {
+        Some(path) => {
+            if dotenv::from_path(path).is_err() {
+                println!("Using config from env variables");
+            };
+        }
+        None => println!("Using config from env variables"),
+    }
 
     let db_name = env::var("MONGO_WEGONICE_DB")?;
     let db_user_name = env::var("MONGO_WEGONICE_USER")?;
     let db_user_password = env::var("MONGO_WEGONICE_PASSWORD")?;
     let db_host = env::var("MONGO_WEGONICE_HOST")?;
+
+    Ok((db_name, db_user_name, db_user_password, db_host))
+}
+
+#[cfg(test)]
+pub async fn get_db_connection() -> Result<Database> {
+    let (db_name, db_user_name, db_user_password, db_host) = get_db_config(Some(".env"))?;
 
     let uri = format!(
         "mongodb://{db_user_name}:{db_user_password}@{db_host}/{db_name}?authSource={db_name}"

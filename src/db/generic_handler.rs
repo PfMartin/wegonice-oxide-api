@@ -60,11 +60,10 @@ impl GenericHandler for MongoDbHandler {
 pub mod unit_tests_generic_handler {
     use super::*;
     use crate::{
-        config::Config,
         model::user::{User, UserMongoDb},
         test_utils::{
-            assert_date_is_current, assert_users_match, db_clean_up, get_db_connection,
-            get_random_user_db, print_assert_failed,
+            assert_date_is_current, assert_users_match, db_clean_up, get_db_config,
+            get_db_connection, get_random_user_db, print_assert_failed,
         },
     };
     use anyhow::Result;
@@ -84,15 +83,10 @@ pub mod unit_tests_generic_handler {
             is_success: true,
         }];
 
-        let config = Config::new(".env")?;
+        let (db_name, db_user_name, db_user_password, db_host) = get_db_config(Some(".env"))?;
 
-        let db_handler = MongoDbHandler::new(
-            &config.db_user_name,
-            &config.db_user_password,
-            &config.db_name,
-            &config.db_host,
-        )
-        .await?;
+        let db_handler =
+            MongoDbHandler::new(&db_user_name, &db_user_password, &db_name, &db_host).await?;
 
         for t in test_cases {
             let db = get_db_connection().await?;
@@ -156,15 +150,9 @@ pub mod unit_tests_generic_handler {
             },
         ];
 
-        let config = Config::new(".env")?;
-
-        let db_handler = MongoDbHandler::new(
-            &config.db_user_name,
-            &config.db_user_password,
-            &config.db_name,
-            &config.db_host,
-        )
-        .await?;
+        let (db_name, db_user_name, db_user_password, db_host) = get_db_config(Some(".env"))?;
+        let db_handler =
+            MongoDbHandler::new(&db_user_name, &db_user_password, &db_name, &db_host).await?;
 
         for t in test_cases {
             let db = get_db_connection().await?;
