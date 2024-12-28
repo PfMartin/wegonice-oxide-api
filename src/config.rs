@@ -7,6 +7,7 @@ pub struct Config {
     pub db_user_name: String,
     pub db_user_password: String,
     pub db_host: String,
+    pub server_host: String,
 }
 
 impl Config {
@@ -24,12 +25,14 @@ impl Config {
         let db_user_name = env::var("MONGO_WEGONICE_USER")?;
         let db_user_password = env::var("MONGO_WEGONICE_PASSWORD")?;
         let db_host = env::var("MONGO_WEGONICE_HOST")?;
+        let server_host = env::var("SERVER_HOST")?;
 
         Ok(Config {
             db_name,
             db_user_name,
             db_user_password,
             db_host,
+            server_host,
         })
     }
 }
@@ -58,6 +61,7 @@ pub mod unit_tests_config {
                     db_user_name: "niceUser".into(),
                     db_user_password: "nicePassword".into(),
                     db_host: "127.0.0.1:27017".into(),
+                    server_host: "127.0.0.1:5000".into()
                 }),
                 env_file_path: "src/test-env".into(),
                 setup_env_file: Some(
@@ -66,6 +70,7 @@ pub mod unit_tests_config {
                     MONGO_WEGONICE_USER=niceUser
                     MONGO_WEGONICE_PASSWORD=nicePassword
                     MONGO_WEGONICE_HOST=127.0.0.1:27017
+                    SERVER_HOST=127.0.0.1:5000
                     "#
                     .into(),
                 ),
@@ -85,6 +90,7 @@ pub mod unit_tests_config {
                     MONGO_WEGONICE_DB=wegonice
                     MONGO_WEGONICE_PASSWORD=nicePassword
                     MONGO_WEGONICE_HOST=127.0.0.1:27017
+                    SERVER_HOST=127.0.0.1:5000
                     "#
                     .into(),
                 ),
@@ -131,6 +137,16 @@ pub mod unit_tests_config {
                             &config.db_user_password
                         )
                     );
+                    assert_eq!(
+                        config.server_host,
+                        expected_config.server_host,
+                        "{}",
+                        print_assert_failed(
+                            &t.title,
+                            &expected_config.server_host,
+                            &config.server_host
+                        )
+                    );
                 }
                 None => assert!(config.is_err()),
             }
@@ -164,11 +180,13 @@ pub mod unit_tests_config {
             String::from("MONGO_WEGONICE_HOST"),
             env::var("MONGO_WEGONICE_HOST")?,
         );
+        saved_vars.insert(String::from("SERVER_HOST"), env::var("SERVER_HOST")?);
 
         env::remove_var("MONGO_WEGONICE_DB");
         env::remove_var("MONGO_WEGONICE_USER");
         env::remove_var("MONGO_WEGONICE_PASSWORD");
         env::remove_var("MONGO_WEGONICE_HOST");
+        env::remove_var("SERVER_HOST");
 
         Ok(saved_vars)
     }
