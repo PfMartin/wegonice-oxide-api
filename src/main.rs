@@ -1,18 +1,18 @@
+mod api;
 mod config;
 mod db;
 mod model;
-mod server;
 
 #[cfg(test)]
 mod test_utils;
 
 use anyhow::{Error, Result};
+use api::{heart_beat_router::HeartBeatRouter, server::Server, users_router::UsersRouter};
 use config::Config;
 use db::{
     generic_handler::GenericHandler, mongo_db_handler::MongoDbHandler, user_handler::UserHandler,
 };
 use model::user::{User, UserCreate, UserMongoDb, UserPatch};
-use server::{heart_beat_router::HeartBeatRouter, server::Server};
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -26,9 +26,9 @@ async fn main() -> Result<(), Error> {
     )
     .await?;
 
-    let heart_beat_router = HeartBeatRouter::new()?;
+    let routers = vec![HeartBeatRouter::new()?.router, UsersRouter::new()?.router];
 
-    let _ = Server::new(&config.server_host, heart_beat_router.router).await?;
+    let _ = Server::new(&config.server_host, routers).await?;
 
     db_handler
         .create_user(UserCreate {
