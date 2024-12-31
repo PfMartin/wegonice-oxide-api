@@ -61,7 +61,7 @@ pub mod unit_tests_config {
                     db_user_name: "niceUser".into(),
                     db_user_password: "nicePassword".into(),
                     db_host: "127.0.0.1:27017".into(),
-                    server_host: "127.0.0.1:5000".into()
+                    server_host: "127.0.0.1:3000".into(),
                 }),
                 env_file_path: "src/test-env".into(),
                 setup_env_file: Some(
@@ -70,7 +70,7 @@ pub mod unit_tests_config {
                     MONGO_WEGONICE_USER=niceUser
                     MONGO_WEGONICE_PASSWORD=nicePassword
                     MONGO_WEGONICE_HOST=127.0.0.1:27017
-                    SERVER_HOST=127.0.0.1:5000
+                    SERVER_HOST=127.0.0.1:3000
                     "#
                     .into(),
                 ),
@@ -90,7 +90,7 @@ pub mod unit_tests_config {
                     MONGO_WEGONICE_DB=wegonice
                     MONGO_WEGONICE_PASSWORD=nicePassword
                     MONGO_WEGONICE_HOST=127.0.0.1:27017
-                    SERVER_HOST=127.0.0.1:5000
+                    SERVER_HOST=127.0.0.1:3000
                     "#
                     .into(),
                 ),
@@ -164,29 +164,26 @@ pub mod unit_tests_config {
     fn clear_env_vars() -> Result<HashMap<String, String>> {
         let mut saved_vars = HashMap::new();
 
-        saved_vars.insert(
-            String::from("MONGO_WEGONICE_DB"),
-            env::var("MONGO_WEGONICE_DB")?,
-        );
-        saved_vars.insert(
-            String::from("MONGO_WEGONICE_USER"),
-            env::var("MONGO_WEGONICE_USER")?,
-        );
-        saved_vars.insert(
-            String::from("MONGO_WEGONICE_PASSWORD"),
-            env::var("MONGO_WEGONICE_PASSWORD")?,
-        );
-        saved_vars.insert(
-            String::from("MONGO_WEGONICE_HOST"),
-            env::var("MONGO_WEGONICE_HOST")?,
-        );
-        saved_vars.insert(String::from("SERVER_HOST"), env::var("SERVER_HOST")?);
+        let env_var_keys = vec![
+            "MONGO_WEGONICE_DB",
+            "MONGO_WEGONICE_USER",
+            "MONGO_WEGONICE_PASSWORD",
+            "MONGO_WEGONICE_HOST",
+            "SERVER_HOST",
+        ];
 
-        env::remove_var("MONGO_WEGONICE_DB");
-        env::remove_var("MONGO_WEGONICE_USER");
-        env::remove_var("MONGO_WEGONICE_PASSWORD");
-        env::remove_var("MONGO_WEGONICE_HOST");
-        env::remove_var("SERVER_HOST");
+        for key in env_var_keys {
+            let var_result = env::var(key);
+
+            match var_result {
+                Ok(value) => {
+                    saved_vars.insert(String::from(key), value);
+
+                    env::remove_var(key)
+                }
+                Err(_) => {}
+            };
+        }
 
         Ok(saved_vars)
     }
