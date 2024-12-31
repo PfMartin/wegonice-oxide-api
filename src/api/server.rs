@@ -8,8 +8,8 @@ pub struct Server {}
 impl Server {
     pub async fn new(host: &str, routers: Vec<Router>) -> Result<Server> {
         let router = routers.into_iter().fold(Router::new(), |mut acc, r| {
-            let temp = replace(&mut acc, Router::new());
-            acc = temp.merge(r);
+            let temp_acc = replace(&mut acc, Router::new());
+            acc = temp_acc.merge(r);
             acc
         });
 

@@ -26,7 +26,7 @@ async fn main() -> Result<(), Error> {
     )
     .await?;
 
-    let routers = vec![HeartBeatRouter::new()?.router, UsersRouter::new()?.router];
+    let routers = vec![HeartBeatRouter::new().router, UsersRouter::new()?.router];
 
     let _ = Server::new(&config.server_host, routers).await?;
 
