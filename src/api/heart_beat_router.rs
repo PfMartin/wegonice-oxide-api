@@ -1,8 +1,5 @@
-use axum::{
-    response::{Html, IntoResponse},
-    routing::get,
-    Router,
-};
+use super::api_response::ApiResponse;
+use axum::{response::IntoResponse, routing::get, Json, Router};
 
 pub struct HeartBeatRouter {
     pub router: Router,
@@ -16,7 +13,10 @@ impl HeartBeatRouter {
     }
 
     async fn get_heart_beat() -> impl IntoResponse {
-        Html("Hello world")
+        Json(ApiResponse::<String> {
+            data: "Ok".into(),
+            error: "".into(),
+        })
     }
 }
 
@@ -25,6 +25,7 @@ mod unit_tests_heart_beat_router {
     use super::*;
     use anyhow::Result;
     use axum_test::TestServer;
+    use pretty_assertions::assert_eq;
     use tokio::test;
 
     #[test]
@@ -37,7 +38,9 @@ mod unit_tests_heart_beat_router {
         let response = server.get("/heart_beat").await;
 
         response.assert_status_ok();
-        response.assert_text("Hello world");
+        let body = response.json::<ApiResponse<String>>();
+        assert_eq!(body.data, "Ok");
+        assert_eq!(body.error, "");
 
         Ok(())
     }

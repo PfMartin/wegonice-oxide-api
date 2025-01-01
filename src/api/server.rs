@@ -14,7 +14,7 @@ impl Server {
         });
 
         let listener = TcpListener::bind(host).await?;
-        println!("Listening on, {:?}", listener.local_addr());
+        println!("Started server on, {host}");
 
         serve(listener, router.into_make_service()).await?;
 
