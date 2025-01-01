@@ -11,7 +11,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(config_path: Option<&str>) -> Result<Config> {
+    pub fn new(config_path: Option<&str>) -> Result<Self> {
         match config_path {
             Some(path) => {
                 if dotenv::from_path(path).is_err() {
@@ -27,7 +27,7 @@ impl Config {
         let db_host = env::var("MONGO_WEGONICE_HOST")?;
         let server_host = env::var("SERVER_HOST")?;
 
-        Ok(Config {
+        Ok(Self {
             db_name,
             db_user_name,
             db_user_password,

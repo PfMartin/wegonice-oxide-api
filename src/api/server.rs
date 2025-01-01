@@ -6,7 +6,7 @@ use tokio::{self, net::TcpListener};
 pub struct Server {}
 
 impl Server {
-    pub async fn new(host: &str, routers: Vec<Router>) -> Result<Server> {
+    pub async fn new(host: &str, routers: Vec<Router>) -> Result<Self> {
         let router = routers.into_iter().fold(Router::new(), |mut acc, r| {
             let temp_acc = replace(&mut acc, Router::new());
             acc = temp_acc.merge(r);
@@ -18,6 +18,6 @@ impl Server {
 
         serve(listener, router.into_make_service()).await?;
 
-        Ok(Server {})
+        Ok(Self {})
     }
 }

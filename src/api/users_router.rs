@@ -10,10 +10,10 @@ pub struct UsersRouter {
 }
 
 impl UsersRouter {
-    pub fn new() -> Result<UsersRouter> {
+    pub fn new() -> Result<Self> {
         let router = Router::new().route("/users", get(Self::get_users));
 
-        Ok(UsersRouter { router })
+        Ok(Self { router })
     }
 
     async fn get_users() -> impl IntoResponse {
