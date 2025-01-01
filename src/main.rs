@@ -1,3 +1,4 @@
+mod api;
 mod config;
 mod db;
 mod model;
@@ -6,6 +7,7 @@ mod model;
 mod test_utils;
 
 use anyhow::{Error, Result};
+use api::{heart_beat_router::HeartBeatRouter, server::Server, users_router::UsersRouter};
 use config::Config;
 use db::{
     generic_handler::GenericHandler, mongo_db_handler::MongoDbHandler, user_handler::UserHandler,
@@ -23,6 +25,10 @@ async fn main() -> Result<(), Error> {
         &config.db_host,
     )
     .await?;
+
+    let routers = vec![HeartBeatRouter::new().router, UsersRouter::new()?.router];
+
+    let _ = Server::new(&config.server_host, routers).await?;
 
     db_handler
         .create_user(UserCreate {
