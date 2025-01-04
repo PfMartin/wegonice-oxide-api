@@ -1,7 +1,7 @@
 use axum::{
     extract::{Path, State},
     http::StatusCode,
-    routing::{get, patch},
+    routing::{delete, get, patch},
     Json, Router,
 };
 use tracing::info;
@@ -25,6 +25,8 @@ impl UsersRouter {
         let router = Router::new()
             .route("/users", get(handle_users))
             .route("/users/{id}", get(handle_user_by_id))
+            .route("/users/by_email/{email}", get(handle_user_by_email))
+            .route("/users/{id}", delete(handle_user_delete))
             .route("/users/activate/{id}", patch(handle_activate_user))
             .route("/users/deactivate/{id}", patch(handle_deactivate_user))
             .with_state(db_handler);
@@ -76,6 +78,60 @@ async fn handle_user_by_id(
         ),
         Err(err) => {
             let err_msg = format!("Failed to get user with id '{user_id}'");
+            info!("{err_msg}: {err}");
+
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiResponse {
+                    data: None,
+                    error: err_msg.into(),
+                }),
+            )
+        }
+    }
+}
+
+async fn handle_user_by_email(
+    State(db_handler): State<MongoDbHandler>,
+    Path(email): Path<String>,
+) -> (StatusCode, Json<ApiResponse<User>>) {
+    match db_handler.get_user_by_email(&email).await {
+        Ok(user) => (
+            StatusCode::OK,
+            Json(ApiResponse {
+                data: Some(user),
+                error: "".into(),
+            }),
+        ),
+        Err(err) => {
+            let err_msg = format!("Failed to get user with email '{email}'");
+            info!("{err_msg}: {err}");
+
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiResponse {
+                    data: None,
+                    error: err_msg.into(),
+                }),
+            )
+        }
+    }
+}
+
+async fn handle_user_delete(
+    State(db_handler): State<MongoDbHandler>,
+    Path(user_id): Path<String>,
+) -> (StatusCode, Json<ApiResponse<u64>>) {
+    match db_handler.delete_user_by_id(&user_id).await {
+        Ok(delete_count) => (
+            StatusCode::NO_CONTENT,
+            Json(ApiResponse {
+                data: Some(delete_count),
+                error: "".into(),
+            }),
+        ),
+        Err(err) => {
+            let err_msg = format!("Failed to delete user with id '{user_id}'");
             info!("{err_msg}: {err}");
 
             (
