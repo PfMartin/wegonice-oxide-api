@@ -1,22 +1,27 @@
-use anyhow::Result;
 use axum::{
+    extract::State,
     response::{Html, IntoResponse},
     routing::get,
     Router,
 };
+use mongodb::Collection;
+
+use crate::{db::mongo_db_handler::MongoDbHandler, model::user::UserMongoDb};
 
 pub struct UsersRouter {
     pub router: Router,
 }
 
 impl UsersRouter {
-    pub fn new() -> Result<Self> {
-        let router = Router::new().route("/users", get(Self::get_users));
+    pub fn new(db_handler: MongoDbHandler) -> Self {
+        let router = Router::new()
+            .route("/users", get(handle_register))
+            .with_state(db_handler);
 
-        Ok(Self { router })
+        Self { router }
     }
+}
 
-    async fn get_users() -> impl IntoResponse {
-        Html("Hello Users")
-    }
+async fn handle_register(State(db_handler): State<MongoDbHandler>) -> impl IntoResponse {
+    Html("Hello Users")
 }

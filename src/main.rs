@@ -9,10 +9,7 @@ mod test_utils;
 use anyhow::{Error, Result};
 use api::{heart_beat_router::HeartBeatRouter, server::Server, users_router::UsersRouter};
 use config::Config;
-use db::{
-    generic_handler::GenericHandler, mongo_db_handler::MongoDbHandler, user_handler::UserHandler,
-};
-use model::user::{User, UserCreate, UserMongoDb, UserPatch};
+use db::mongo_db_handler::MongoDbHandler;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -26,38 +23,12 @@ async fn main() -> Result<(), Error> {
     )
     .await?;
 
-    let routers = vec![HeartBeatRouter::new().router, UsersRouter::new()?.router];
+    let routers = vec![
+        HeartBeatRouter::new().router,
+        UsersRouter::new(db_handler.clone()).router,
+    ];
 
     let _ = Server::new(&config.server_host, routers).await?;
-
-    db_handler
-        .create_user(UserCreate {
-            email: String::from("Test"),
-            password_hash: String::from("hello"),
-        })
-        .await?;
-
-    db_handler
-        .get_multiple::<UserMongoDb, User>("users")
-        .await?;
-
-    db_handler
-        .get_by_id::<UserMongoDb, User>("1", "users")
-        .await?;
-
-    db_handler.get_user_by_email("test").await?;
-    db_handler
-        .patch_user_by_id(
-            "id",
-            UserPatch {
-                email: None,
-                password_hash: None,
-                role: None,
-                is_activated: None,
-            },
-        )
-        .await?;
-    db_handler.delete_user_by_id("test").await?;
 
     Ok(())
 }

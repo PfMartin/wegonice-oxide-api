@@ -3,6 +3,7 @@ use anyhow::Result;
 
 use mongodb::{options::ClientOptions, Client, Collection, Database};
 
+#[derive(Clone)]
 pub struct MongoDbHandler {
     pub users_collection: Collection<UserMongoDb>,
     pub db: Database,
