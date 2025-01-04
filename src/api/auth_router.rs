@@ -4,6 +4,7 @@ use axum::{
     routing::post,
     Json, Router,
 };
+use tracing::info;
 
 use crate::{
     db::{mongo_db_handler::MongoDbHandler, user_handler::UserHandler},
@@ -46,7 +47,7 @@ async fn handle_register(
             }),
         ),
         Err(err) => {
-            println!("{err}");
+            info!("{err}");
 
             let err_msg = "Failed to create new user";
 

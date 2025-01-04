@@ -3,6 +3,7 @@ use anyhow::Result;
 
 use bson::doc;
 use mongodb::{options::ClientOptions, Client, Collection, Database};
+use tracing::info;
 
 #[derive(Clone)]
 pub struct MongoDbHandler {
@@ -19,12 +20,12 @@ impl MongoDbHandler {
 
         let connect_info = format!("database '{db_name}' as user '{user}' on host '{db_host}'");
 
-        println!("Trying to connect to {connect_info}");
+        info!("Trying to connect to {connect_info}");
         client
             .database(db_name)
             .run_command(doc! { "ping": 1 })
             .await?;
-        println!("Connected to {connect_info}");
+        info!("Connected to {connect_info}");
 
         let db = client.database(db_name);
         let users_collection = db.collection("users");

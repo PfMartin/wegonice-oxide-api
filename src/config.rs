@@ -1,5 +1,6 @@
 use anyhow::Result;
 use std::env;
+use tracing::info;
 
 #[derive(Debug)]
 pub struct Config {
@@ -15,10 +16,10 @@ impl Config {
         match config_path {
             Some(path) => {
                 if dotenv::from_path(path).is_err() {
-                    println!("Using config from env variables");
+                    info!("Using config from env variables");
                 };
             }
-            None => println!("Using config from env variables"),
+            None => info!("Using config from env variables"),
         }
 
         let db_name = env::var("MONGO_WEGONICE_DB")?;
