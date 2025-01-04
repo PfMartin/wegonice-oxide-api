@@ -84,7 +84,7 @@ async fn handle_user_by_id(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ApiResponse {
                     data: None,
-                    error: err_msg.into(),
+                    error: err_msg,
                 }),
             )
         }
@@ -111,7 +111,7 @@ async fn handle_user_by_email(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ApiResponse {
                     data: None,
-                    error: err_msg.into(),
+                    error: err_msg,
                 }),
             )
         }
@@ -138,7 +138,7 @@ async fn handle_user_delete(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ApiResponse {
                     data: None,
-                    error: err_msg.into(),
+                    error: err_msg,
                 }),
             )
         }
@@ -176,7 +176,7 @@ async fn handle_activate_user(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ApiResponse {
                     data: None,
-                    error: err_msg.into(),
+                    error: err_msg,
                 }),
             )
         }
@@ -214,7 +214,7 @@ async fn handle_deactivate_user(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ApiResponse {
                     data: None,
-                    error: err_msg.into(),
+                    error: err_msg,
                 }),
             )
         }
