@@ -30,6 +30,12 @@ pub struct User {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
+pub struct AuthPayload {
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UserCreate {
     pub email: String,

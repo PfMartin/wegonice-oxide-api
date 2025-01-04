@@ -12,6 +12,8 @@ pub struct MongoDbHandler {
 impl MongoDbHandler {
     pub async fn new(user: &str, password: &str, db_name: &str, db_host: &str) -> Result<Self> {
         let uri = format!("mongodb://{user}:{password}@{db_host}/{db_name}?authSource={db_name}");
+        println!("{uri}");
+
         let client_options = ClientOptions::parse(uri).await?;
         let client = Client::with_options(client_options)?;
 

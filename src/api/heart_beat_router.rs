@@ -14,7 +14,7 @@ impl HeartBeatRouter {
 
     async fn get_heart_beat() -> impl IntoResponse {
         Json(ApiResponse::<String> {
-            data: "Ok".into(),
+            data: Some("Ok".into()),
             error: "".into(),
         })
     }
@@ -39,7 +39,7 @@ mod unit_tests_heart_beat_router {
 
         response.assert_status_ok();
         let body = response.json::<ApiResponse<String>>();
-        assert_eq!(body.data, "Ok");
+        assert_eq!(body.data, Some(String::from("Ok")));
         assert_eq!(body.error, "");
 
         Ok(())

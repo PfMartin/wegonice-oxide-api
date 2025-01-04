@@ -7,7 +7,10 @@ mod model;
 mod test_utils;
 
 use anyhow::{Error, Result};
-use api::{heart_beat_router::HeartBeatRouter, server::Server, users_router::UsersRouter};
+use api::{
+    auth_router::AuthRouter, heart_beat_router::HeartBeatRouter, server::Server,
+    users_router::UsersRouter,
+};
 use config::Config;
 use db::mongo_db_handler::MongoDbHandler;
 
@@ -16,15 +19,16 @@ async fn main() -> Result<(), Error> {
     let config = Config::new(Some(".env"))?;
 
     let db_handler = MongoDbHandler::new(
-        &config.db_name,
         &config.db_user_name,
         &config.db_user_password,
+        &config.db_name,
         &config.db_host,
     )
     .await?;
 
     let routers = vec![
         HeartBeatRouter::new().router,
+        AuthRouter::new(db_handler.clone()).router,
         UsersRouter::new(db_handler.clone()).router,
     ];
 
