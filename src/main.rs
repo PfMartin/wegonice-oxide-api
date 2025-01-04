@@ -8,8 +8,10 @@ mod test_utils;
 
 use anyhow::{Error, Result};
 use api::{
-    auth_router::AuthRouter, heart_beat_router::HeartBeatRouter, server::Server,
-    users_router::UsersRouter,
+    routers::{
+        auth_router::AuthRouter, heart_beat_router::HeartBeatRouter, users_router::UsersRouter,
+    },
+    server::Server,
 };
 use config::Config;
 use db::mongo_db_handler::MongoDbHandler;

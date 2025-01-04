@@ -11,7 +11,7 @@ use crate::{
     model::user::{AuthPayload, UserCreate},
 };
 
-use super::api_response::ApiResponse;
+use super::super::api_response::ApiResponse;
 
 pub struct AuthRouter {
     pub router: Router,

@@ -1,4 +1,4 @@
-use super::api_response::ApiResponse;
+use super::super::api_response::ApiResponse;
 use axum::{response::IntoResponse, routing::get, Json, Router};
 
 pub struct HeartBeatRouter {

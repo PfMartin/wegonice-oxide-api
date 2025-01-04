@@ -6,7 +6,7 @@ use crate::{
     model::user::{User, UserMongoDb},
 };
 
-use super::api_response::ApiResponse;
+use super::super::api_response::ApiResponse;
 
 pub struct UsersRouter {
     pub router: Router,
