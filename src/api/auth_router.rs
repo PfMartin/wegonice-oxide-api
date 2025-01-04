@@ -37,9 +37,7 @@ async fn handle_register(
         password_hash: payload.password,
     };
 
-    let create_result = db_handler.create_user(user_create).await;
-
-    match create_result {
+    match db_handler.create_user(user_create).await {
         Ok(inserted_id) => (
             StatusCode::CREATED,
             Json(ApiResponse {
