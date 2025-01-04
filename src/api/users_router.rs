@@ -1,4 +1,5 @@
 use axum::{extract::State, http::StatusCode, routing::get, Json, Router};
+use tracing::info;
 
 use crate::{
     db::{generic_handler::GenericHandler, mongo_db_handler::MongoDbHandler},
@@ -36,6 +37,7 @@ async fn get_users(
         ),
         Err(err) => {
             let err_msg = "Failed to get multiple users";
+            info!("{err_msg}: {err}");
 
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,

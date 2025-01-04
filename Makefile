@@ -26,3 +26,6 @@ fmt-check:
 
 clippy-check:
 	cargo clippy -- --D warnings
+
+watch:
+	cargo watch -q -w src -x run
