@@ -7,6 +7,7 @@ use axum::{
 use tracing::info;
 
 use crate::{
+    api::services::hash_service::verify_password_hash,
     db::{mongo_db_handler::MongoDbHandler, user_handler::UserHandler},
     model::user::{AuthPayload, UserCreate},
 };
@@ -23,6 +24,7 @@ impl AuthRouter {
 
         let router = Router::new()
             .route(&format!("{base_path}/register"), post(handle_register))
+            .route(&format!("{base_path}/login"), post(handle_login))
             .with_state(db_handler);
 
         Self { router }
@@ -51,7 +53,8 @@ async fn handle_register(
 
     match db_handler.create_user(user_create).await {
         Ok(inserted_id) => (
-            StatusCode::CREATED,
+            // TODO: SEND EMAIL
+            StatusCode::ACCEPTED,
             Json(ApiResponse {
                 data: Some(inserted_id),
                 error: "".into(),
@@ -66,6 +69,56 @@ async fn handle_register(
                 Json(ApiResponse {
                     data: None,
                     error: err_msg.into(),
+                }),
+            )
+        }
+    }
+}
+
+async fn handle_login(
+    State(db_handler): State<MongoDbHandler>,
+    Json(payload): extract::Json<AuthPayload>,
+) -> (StatusCode, Json<ApiResponse<String>>) {
+    let user = match db_handler.get_user_by_email(&payload.email).await {
+        Ok(u) => u,
+        Err(err) => {
+            let err_msg = format!(
+                "Failed to find user with the provided email: {}",
+                &payload.email
+            );
+            info!("{err_msg}: {err}");
+
+            return (
+                StatusCode::NOT_FOUND,
+                Json(ApiResponse {
+                    data: None,
+                    error: err_msg,
+                }),
+            );
+        }
+    };
+
+    match verify_password_hash(&payload.password, &user.password_hash) {
+        Ok(_) => (
+            // TODO: SET JWT TOKEN IN COOKIE
+            StatusCode::ACCEPTED,
+            Json(ApiResponse {
+                data: None,
+                error: "".into(),
+            }),
+        ),
+        Err(err) => {
+            let err_msg = format!(
+                "Failed to find user with the provided email: {}",
+                &payload.email
+            );
+            info!("{err_msg}: {err}");
+
+            (
+                StatusCode::UNAUTHORIZED,
+                Json(ApiResponse {
+                    data: None,
+                    error: err_msg,
                 }),
             )
         }

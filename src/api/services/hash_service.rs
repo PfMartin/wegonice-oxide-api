@@ -22,7 +22,7 @@ pub fn verify_password_hash(password: &str, password_hash: &str) -> Result<()> {
         Err(err) => return Err(anyhow!("{err}")),
     };
 
-    match hasher.verify_password(&password.as_bytes(), &parsed_hash) {
+    match hasher.verify_password(password.as_bytes(), &parsed_hash) {
         Ok(_) => Ok(()),
         Err(err) => Err(anyhow!("{err}")),
     }

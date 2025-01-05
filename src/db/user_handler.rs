@@ -1,12 +1,12 @@
 use super::mongo_db_handler::MongoDbHandler;
 
-use crate::model::user::{Role, User, UserCreate, UserMongoDb, UserPatch};
+use crate::model::user::{Role, UserCreate, UserMongoDb, UserPatch};
 use anyhow::{anyhow, Result};
 use bson::{doc, oid::ObjectId, to_bson, Bson, DateTime};
 
 pub trait UserHandler {
     async fn create_user(&self, user: UserCreate) -> Result<String>;
-    async fn get_user_by_email(&self, email: &str) -> Result<User>;
+    async fn get_user_by_email(&self, email: &str) -> Result<UserMongoDb>;
     async fn patch_user_by_id(&self, id: &str, user_patch: UserPatch) -> Result<()>;
     async fn delete_user_by_id(&self, id: &str) -> Result<u64>;
 }
@@ -34,13 +34,13 @@ impl UserHandler for MongoDbHandler {
         }
     }
 
-    async fn get_user_by_email(&self, email: &str) -> Result<User> {
+    async fn get_user_by_email(&self, email: &str) -> Result<UserMongoDb> {
         let filter = doc! {"email": email};
 
         let find_result = self.users_collection.find_one(filter).await?;
 
         match find_result {
-            Some(user) => Ok(user.into()),
+            Some(user) => Ok(user),
             None => Err(anyhow!("Failed to find user with email {}", email)),
         }
     }
@@ -93,14 +93,15 @@ pub mod unit_tests_users_handler {
     use crate::{
         model::user::UserMongoDb,
         test_utils::{
-            assert_date_is_current, assert_users_match, db_clean_up, get_db_config,
-            get_db_connection, get_random_user_db, print_assert_failed,
+            assert_date_is_current, db_clean_up, get_db_config, get_db_connection,
+            get_random_user_db, print_assert_failed,
         },
     };
 
     use super::*;
     use anyhow::Result;
     use bson::{doc, oid::ObjectId};
+    use pretty_assertions::assert_eq;
     use tokio::test;
 
     #[test]
@@ -217,11 +218,9 @@ pub mod unit_tests_users_handler {
                 None => return Err(anyhow!("Failed to get first user from test users")),
             };
 
-            let user_to_find: User = db_user_to_find.clone().into();
-
             let email = match t.test_email {
                 Some(e) => e,
-                None => user_to_find.clone().email,
+                None => db_user_to_find.clone().email,
             };
 
             let get_result = db_handler.get_user_by_email(&email).await;
@@ -229,7 +228,20 @@ pub mod unit_tests_users_handler {
             if t.is_success {
                 let got_user = get_result?;
 
-                assert_users_match(&t.title, &got_user, &user_to_find);
+                assert_eq!(got_user._id, db_user_to_find._id, "{}", &t.title);
+                assert_eq!(got_user.email, db_user_to_find.email, "{}", &t.title);
+                assert_eq!(
+                    got_user.password_hash, db_user_to_find.password_hash,
+                    "{}",
+                    &t.title
+                );
+                assert_eq!(got_user.role, db_user_to_find.role, "{}", &t.title);
+                assert_eq!(
+                    got_user.is_activated, db_user_to_find.is_activated,
+                    "{}",
+                    &t.title
+                );
+
                 assert_date_is_current(got_user.created_at, &t.title)?;
                 assert_date_is_current(got_user.modified_at, &t.title)?;
             } else {
