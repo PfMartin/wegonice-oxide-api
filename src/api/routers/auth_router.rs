@@ -7,7 +7,6 @@ use axum::{
 use tracing::info;
 
 use crate::{
-    api::services::hash_service::hash_password,
     db::{mongo_db_handler::MongoDbHandler, user_handler::UserHandler},
     model::user::{AuthPayload, UserCreate},
 };
@@ -34,8 +33,8 @@ async fn handle_register(
     State(db_handler): State<MongoDbHandler>,
     Json(payload): extract::Json<AuthPayload>,
 ) -> (StatusCode, Json<ApiResponse<String>>) {
-    let hashed_password = match hash_password(&payload.password) {
-        Ok(hash) => hash,
+    let user_create: UserCreate = match payload.try_into() {
+        Ok(u) => u,
         Err(err) => {
             let err_msg = "Failed to process provided user data";
             info!("{err_msg}: {err}");
@@ -48,11 +47,6 @@ async fn handle_register(
                 }),
             );
         }
-    };
-
-    let user_create = UserCreate {
-        email: payload.email,
-        password_hash: hashed_password,
     };
 
     match db_handler.create_user(user_create).await {

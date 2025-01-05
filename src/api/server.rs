@@ -8,8 +8,6 @@ pub struct Server {}
 
 impl Server {
     pub async fn new(host: &str, routers: Vec<Router>) -> Result<Self> {
-        tracing_subscriber::fmt().init();
-
         let router = routers
             .into_iter()
             .fold(Router::new(), |mut acc, r| {

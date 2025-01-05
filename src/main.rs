@@ -18,6 +18,8 @@ use db::mongo_db_handler::MongoDbHandler;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    tracing_subscriber::fmt().json().init();
+
     let config = Config::new(Some(".env"))?;
 
     let db_handler = MongoDbHandler::new(
