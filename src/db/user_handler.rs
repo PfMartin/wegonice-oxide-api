@@ -123,7 +123,7 @@ pub mod unit_tests_users_handler {
         model::user::UserMongoDb,
         test_utils::{
             assert_date_is_current, db_clean_up, get_db_config, get_db_connection,
-            get_random_user_db, print_assert_failed,
+            get_random_email, get_random_string, get_random_user_db, print_assert_failed,
         },
     };
 
@@ -131,9 +131,8 @@ pub mod unit_tests_users_handler {
     use anyhow::Result;
     use bson::{doc, oid::ObjectId};
     use pretty_assertions::assert_eq;
-    use tokio::test;
 
-    #[test]
+    #[tokio::test]
     async fn create_user() -> Result<()> {
         struct TestCase {
             title: String,
@@ -207,7 +206,7 @@ pub mod unit_tests_users_handler {
         Ok(())
     }
 
-    #[test]
+    #[tokio::test]
     async fn get_user_by_email() -> Result<()> {
         struct TestCase {
             title: String,
@@ -277,7 +276,7 @@ pub mod unit_tests_users_handler {
         Ok(())
     }
 
-    #[test]
+    #[tokio::test]
     async fn patch_user_by_id() -> Result<()> {
         struct TestCase {
             title: String,
@@ -404,7 +403,7 @@ pub mod unit_tests_users_handler {
         Ok(())
     }
 
-    #[test]
+    #[tokio::test]
     async fn delete_user() -> Result<()> {
         struct TestCase {
             title: String,
@@ -460,6 +459,50 @@ pub mod unit_tests_users_handler {
 
         for t in test_cases {
             run_test(&t).await?;
+            db_clean_up().await?;
+        }
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn get_user_auth_info() -> Result<()> {
+        struct TestCase {
+            title: String,
+        }
+
+        let test_cases = vec![TestCase {
+            title: "Successfully returns user auth info".into(),
+        }];
+
+        for t in test_cases {
+            let (db_name, db_user_name, db_user_password, db_host) = get_db_config(Some(".env"))?;
+
+            // TODO: Create helper function for this
+            let users_collection = get_db_connection()
+                .await?
+                .collection::<UserMongoDb>("users");
+
+            let user = get_random_user_db(None);
+            let _ = users_collection.insert_one(&user).await?;
+
+            let db_handler =
+                MongoDbHandler::new(&db_user_name, &db_user_password, &db_name, &db_host).await?;
+
+            let user_auth_info = db_handler.get_user_auth_info(&user.email).await?;
+
+            assert_eq!(
+                &user_auth_info.password_hash, &user.password_hash,
+                "{}",
+                &t.title
+            );
+            assert_eq!(&user_auth_info.role, &user.role, "{}", &t.title);
+            assert_eq!(
+                &user_auth_info.is_activated, &user.is_activated,
+                "{}",
+                &t.title
+            );
+
             db_clean_up().await?;
         }
 
