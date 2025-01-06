@@ -97,7 +97,7 @@ impl UserHandler for MongoDbHandler {
         };
 
         let stage_project = doc! {
-            "$project": { "password_hash": 1, "role": 1, "is_activated": 1}
+            "$project": { "email": 1, "password_hash": 1, "role": 1, "is_activated": 1}
         };
 
         let pipeline = vec![stage_match_email, stage_project];
@@ -512,6 +512,7 @@ pub mod unit_tests_users_handler {
             } else {
                 let user_auth_info = result?;
 
+                assert_eq!(&user_auth_info.email, search_email, "{}", t.title);
                 assert_eq!(
                     &user_auth_info.password_hash, &user.password_hash,
                     "{}",

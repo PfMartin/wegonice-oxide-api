@@ -63,6 +63,7 @@ impl TryFrom<AuthPayload> for UserCreate {
 
 #[derive(Deserialize)]
 pub struct UserAuthInfo {
+    pub email: String,
     pub password_hash: String,
     pub role: Role,
     pub is_activated: bool,

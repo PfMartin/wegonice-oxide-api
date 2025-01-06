@@ -7,7 +7,7 @@ use axum::{
 use tracing::info;
 
 use crate::{
-    api::services::hash_service::verify_password_hash,
+    api::services::{hash_service::verify_password_hash, token_service::generate_jwt},
     db::{mongo_db_handler::MongoDbHandler, user_handler::UserHandler},
     model::user::{AuthPayload, UserCreate},
 };
@@ -124,7 +124,23 @@ async fn handle_login(
         );
     }
 
-    println!("Added role: '{:?}' to JWT token", &auth_info.role);
+    let token = match generate_jwt(&auth_info, 24, "test") {
+        Ok(t) => t,
+        Err(err) => {
+            let err_msg = "Failed to generate JWT token";
+            info!("{err_msg}: {err}");
+
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiResponse {
+                    data: None,
+                    error: err_msg.into(),
+                }),
+            );
+        }
+    };
+
+    println!("Token: {token} ");
 
     (
         // TODO: SET JWT TOKEN with role IN COOKIE
