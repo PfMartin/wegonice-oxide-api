@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use bson::{oid::ObjectId, DateTime};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 
 use crate::api::services::hash_service::hash_password;
 
@@ -28,9 +28,17 @@ pub struct User {
     pub email: String,
     pub role: Role,
     pub is_activated: bool,
-    // TODO: Get correct date in json
+    #[serde(serialize_with = "serialize_datetime")]
     pub created_at: DateTime,
+    #[serde(serialize_with = "serialize_datetime")]
     pub modified_at: DateTime,
+}
+
+fn serialize_datetime<S>(date: &DateTime, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    serializer.serialize_str(&date.to_string())
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -145,6 +153,39 @@ mod unit_tests_user_model {
             let user_create: Result<UserCreate> = t.auth_payload.try_into();
 
             assert_eq!(user_create.is_ok(), t.is_success, "{}", &t.title);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn serialize_user() -> Result<()> {
+        struct TestCase {
+            title: String,
+            user: User,
+            expected_json: String,
+        }
+
+        let email = get_random_email();
+        let now = DateTime::now().to_system_time();
+
+        let test_cases = vec![TestCase {
+            title: "Successfully serializes user to json".into(),
+            user: User {
+                id: "TestId".into(),
+                email: email.clone(),
+                role: Role::User,
+                is_activated: true,
+                created_at: DateTime::from_system_time(now),
+                modified_at: DateTime::from_system_time(now),
+            },
+            expected_json: format!("{{\"id\":\"TestId\",\"email\":\"{email}\",\"role\":\"User\",\"isActivated\":true,\"createdAt\":\"{}\",\"modifiedAt\":\"{}\"}}", DateTime::from_system_time(now).to_string(), DateTime::from_system_time(now).to_string()),
+        }];
+
+        for t in test_cases {
+            let serialized_user = serde_json::to_string(&t.user)?;
+
+            assert_eq!(serialized_user, t.expected_json, "{}", t.title);
         }
 
         Ok(())
