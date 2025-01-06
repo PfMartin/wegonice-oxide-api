@@ -97,7 +97,7 @@ impl UserHandler for MongoDbHandler {
         };
 
         let stage_project = doc! {
-            "$project": { "password_hash": 1}
+            "$project": { "password_hash": 1, "role": 1, "is_activated": 1}
         };
 
         let pipeline = vec![stage_match_email, stage_project];
