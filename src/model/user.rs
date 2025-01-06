@@ -28,6 +28,7 @@ pub struct User {
     pub email: String,
     pub role: Role,
     pub is_activated: bool,
+    // TODO: Get correct date in json
     pub created_at: DateTime,
     pub modified_at: DateTime,
 }

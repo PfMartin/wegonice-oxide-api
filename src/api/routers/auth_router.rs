@@ -124,8 +124,10 @@ async fn handle_login(
         );
     }
 
+    println!("Added role: '{:?}' to JWT token", &auth_info.role);
+
     (
-        // TODO: SET JWT TOKEN IN COOKIE
+        // TODO: SET JWT TOKEN with role IN COOKIE
         StatusCode::ACCEPTED,
         Json(ApiResponse {
             data: Some("Login successful".into()),

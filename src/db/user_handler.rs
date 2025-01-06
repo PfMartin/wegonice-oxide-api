@@ -112,7 +112,7 @@ impl UserHandler for MongoDbHandler {
                 }
                 Err(err) => Err(anyhow!("Failed to get user auth info: {err}")),
             },
-            None => return Err(anyhow!("Failed to find any matching documents")),
+            None => Err(anyhow!("Failed to find any matching documents")),
         }
     }
 }
@@ -123,7 +123,7 @@ pub mod unit_tests_users_handler {
         model::user::UserMongoDb,
         test_utils::{
             assert_date_is_current, db_clean_up, get_db_config, get_db_connection,
-            get_random_email, get_random_string, get_random_user_db, print_assert_failed,
+            get_random_user_db, print_assert_failed,
         },
     };
 
@@ -469,11 +469,22 @@ pub mod unit_tests_users_handler {
     async fn get_user_auth_info() -> Result<()> {
         struct TestCase {
             title: String,
+            test_email: Option<String>,
+            is_success: bool,
         }
 
-        let test_cases = vec![TestCase {
-            title: "Successfully returns user auth info".into(),
-        }];
+        let test_cases = vec![
+            TestCase {
+                title: "Successfully returns user auth info".into(),
+                test_email: None,
+                is_success: true,
+            },
+            TestCase {
+                title: "Fails returns user auth info for non-existing email".into(),
+                test_email: Some("not_existing@gmail.com".into()),
+                is_success: false,
+            },
+        ];
 
         for t in test_cases {
             let (db_name, db_user_name, db_user_password, db_host) = get_db_config(Some(".env"))?;
@@ -489,19 +500,30 @@ pub mod unit_tests_users_handler {
             let db_handler =
                 MongoDbHandler::new(&db_user_name, &db_user_password, &db_name, &db_host).await?;
 
-            let user_auth_info = db_handler.get_user_auth_info(&user.email).await?;
+            let search_email = match &t.test_email {
+                Some(email) => &email,
+                None => &user.email,
+            };
 
-            assert_eq!(
-                &user_auth_info.password_hash, &user.password_hash,
-                "{}",
-                &t.title
-            );
-            assert_eq!(&user_auth_info.role, &user.role, "{}", &t.title);
-            assert_eq!(
-                &user_auth_info.is_activated, &user.is_activated,
-                "{}",
-                &t.title
-            );
+            let result = db_handler.get_user_auth_info(&search_email).await;
+
+            if !t.is_success {
+                assert!(result.is_err(), "{}", &t.title);
+            } else {
+                let user_auth_info = result?;
+
+                assert_eq!(
+                    &user_auth_info.password_hash, &user.password_hash,
+                    "{}",
+                    &t.title
+                );
+                assert_eq!(&user_auth_info.role, &user.role, "{}", &t.title);
+                assert_eq!(
+                    &user_auth_info.is_activated, &user.is_activated,
+                    "{}",
+                    &t.title
+                );
+            }
 
             db_clean_up().await?;
         }
