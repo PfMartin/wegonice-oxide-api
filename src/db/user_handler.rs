@@ -1,14 +1,16 @@
 use super::mongo_db_handler::MongoDbHandler;
 
-use crate::model::user::{Role, UserCreate, UserMongoDb, UserPatch};
+use crate::model::user::{Role, User, UserAuthInfo, UserCreate, UserMongoDb, UserPatch};
 use anyhow::{anyhow, Result};
 use bson::{doc, oid::ObjectId, to_bson, Bson, DateTime};
+use futures_util::StreamExt;
 
 pub trait UserHandler {
     async fn create_user(&self, user: UserCreate) -> Result<String>;
-    async fn get_user_by_email(&self, email: &str) -> Result<UserMongoDb>;
+    async fn get_user_by_email(&self, email: &str) -> Result<User>;
     async fn patch_user_by_id(&self, id: &str, user_patch: UserPatch) -> Result<()>;
     async fn delete_user_by_id(&self, id: &str) -> Result<u64>;
+    async fn get_user_auth_info(&self, email: &str) -> Result<UserAuthInfo>;
 }
 
 impl UserHandler for MongoDbHandler {
@@ -34,13 +36,13 @@ impl UserHandler for MongoDbHandler {
         }
     }
 
-    async fn get_user_by_email(&self, email: &str) -> Result<UserMongoDb> {
+    async fn get_user_by_email(&self, email: &str) -> Result<User> {
         let filter = doc! {"email": email};
 
         let find_result = self.users_collection.find_one(filter).await?;
 
         match find_result {
-            Some(user) => Ok(user),
+            Some(user) => Ok(user.into()),
             None => Err(anyhow!("Failed to find user with email {}", email)),
         }
     }
@@ -85,6 +87,33 @@ impl UserHandler for MongoDbHandler {
         let delete_result = self.users_collection.delete_one(filter).await?;
 
         Ok(delete_result.deleted_count)
+    }
+
+    async fn get_user_auth_info(&self, email: &str) -> Result<UserAuthInfo> {
+        let stage_match_email = doc! {
+            "$match": {
+                "email": email,
+            }
+        };
+
+        let stage_project = doc! {
+            "$project": { "password_hash": 1}
+        };
+
+        let pipeline = vec![stage_match_email, stage_project];
+
+        let mut results = self.users_collection.aggregate(pipeline).await?;
+
+        match results.next().await {
+            Some(document) => match document {
+                Ok(document) => {
+                    let auth_info: UserAuthInfo = bson::from_document(document)?;
+                    Ok(auth_info)
+                }
+                Err(err) => Err(anyhow!("Failed to get user auth info: {err}")),
+            },
+            None => return Err(anyhow!("Failed to find any matching documents")),
+        }
     }
 }
 
@@ -228,13 +257,7 @@ pub mod unit_tests_users_handler {
             if t.is_success {
                 let got_user = get_result?;
 
-                assert_eq!(got_user._id, db_user_to_find._id, "{}", &t.title);
                 assert_eq!(got_user.email, db_user_to_find.email, "{}", &t.title);
-                assert_eq!(
-                    got_user.password_hash, db_user_to_find.password_hash,
-                    "{}",
-                    &t.title
-                );
                 assert_eq!(got_user.role, db_user_to_find.role, "{}", &t.title);
                 assert_eq!(
                     got_user.is_activated, db_user_to_find.is_activated,

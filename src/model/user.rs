@@ -52,6 +52,13 @@ impl TryFrom<AuthPayload> for UserCreate {
     }
 }
 
+#[derive(Deserialize)]
+pub struct UserAuthInfo {
+    pub password_hash: String,
+    pub role: Role,
+    pub is_activated: bool,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UserCreate {

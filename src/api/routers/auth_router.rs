@@ -79,7 +79,7 @@ async fn handle_login(
     State(db_handler): State<MongoDbHandler>,
     Json(payload): extract::Json<AuthPayload>,
 ) -> (StatusCode, Json<ApiResponse<String>>) {
-    let user = match db_handler.get_user_by_email(&payload.email).await {
+    let auth_info = match db_handler.get_user_auth_info(&payload.email).await {
         Ok(u) => u,
         Err(err) => {
             let err_msg = format!(
@@ -98,29 +98,38 @@ async fn handle_login(
         }
     };
 
-    match verify_password_hash(&payload.password, &user.password_hash) {
-        Ok(_) => (
-            // TODO: SET JWT TOKEN IN COOKIE
-            StatusCode::ACCEPTED,
+    if verify_password_hash(&payload.password, &auth_info.password_hash).is_err() {
+        let err_msg = format!("Incorrect password: {}", &payload.email);
+        info!("{err_msg}");
+
+        return (
+            StatusCode::UNAUTHORIZED,
             Json(ApiResponse {
                 data: None,
-                error: "".into(),
+                error: err_msg,
             }),
-        ),
-        Err(err) => {
-            let err_msg = format!(
-                "Failed to find user with the provided email: {}",
-                &payload.email
-            );
-            info!("{err_msg}: {err}");
-
-            (
-                StatusCode::UNAUTHORIZED,
-                Json(ApiResponse {
-                    data: None,
-                    error: err_msg,
-                }),
-            )
-        }
+        );
     }
+
+    if !&auth_info.is_activated {
+        let err_msg = format!("User is inactive: {}", &payload.email);
+        info!("{err_msg}");
+
+        return (
+            StatusCode::UNAUTHORIZED,
+            Json(ApiResponse {
+                data: None,
+                error: err_msg,
+            }),
+        );
+    }
+
+    (
+        // TODO: SET JWT TOKEN IN COOKIE
+        StatusCode::ACCEPTED,
+        Json(ApiResponse {
+            data: None,
+            error: "".into(),
+        }),
+    )
 }
