@@ -124,7 +124,7 @@ async fn handle_login(
         );
     }
 
-    let token = match generate_jwt(&auth_info, 24, "test") {
+    let token = match generate_jwt(&auth_info, 1, "test") {
         Ok(t) => t,
         Err(err) => {
             let err_msg = "Failed to generate JWT token";
