@@ -140,13 +140,11 @@ async fn handle_login(
         }
     };
 
-    println!("Token: {token} ");
-
     (
         // TODO: SET JWT TOKEN with role IN COOKIE
         StatusCode::ACCEPTED,
         Json(ApiResponse {
-            data: Some("Login successful".into()),
+            data: Some(token),
             error: "".into(),
         }),
     )
