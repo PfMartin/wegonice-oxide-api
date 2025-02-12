@@ -33,3 +33,36 @@ pub fn generate_jwt(
 
     Ok(token)
 }
+
+#[cfg(test)]
+mod unit_tests_token_service {
+    use jsonwebtoken::{decode, DecodingKey, Validation};
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn generates_jwt() -> Result<()> {
+        let secret = "testSecret";
+        let user_auth_info = UserAuthInfo {
+            email: "test@email.com".into(),
+            password_hash: "test".into(),
+            role: Role::User,
+            is_activated: true,
+        };
+
+        let token = generate_jwt(&user_auth_info, 1, secret)?;
+        let decoded_token = decode::<Claims>(
+            &token,
+            &DecodingKey::from_secret(secret.as_ref()),
+            &Validation::default(),
+        )?;
+
+        let decoded_claims = decoded_token.claims;
+
+        assert_eq!(decoded_claims.sub, user_auth_info.email.to_string());
+        assert_eq!(decoded_claims.role, user_auth_info.role);
+
+        Ok(())
+    }
+}
