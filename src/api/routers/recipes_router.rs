@@ -43,9 +43,9 @@ async fn handle_get_recipes(
 ) -> (StatusCode, Json<ApiResponse<String>>) {
     println!("{}", router_state.db_handler.db.name());
 
-    let token = match headers.get("wegonice-token") {
+    let token = match headers.get("Authorization") {
         Some(t) => match t.to_str() {
-            Ok(t) => t,
+            Ok(t) => t.split("Bearer").collect::<Vec<&str>>()[1].trim(),
             Err(e) => {
                 println!("FAILED TO GET TOKEN");
                 return (
