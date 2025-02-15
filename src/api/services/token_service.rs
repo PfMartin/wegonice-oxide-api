@@ -5,8 +5,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::model::user::{Role, UserAuthInfo};
 
-// TODO: Create OOP service
-
 #[derive(Serialize, Deserialize)]
 pub struct Claims {
     pub sub: String,

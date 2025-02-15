@@ -53,7 +53,7 @@ async fn handle_register(
 
     match db_handler.create_user(user_create).await {
         Ok(inserted_id) => (
-            // TODO: SEND EMAIL
+            // TODO: SEND EMAIL REGARDING VERIFICATION
             StatusCode::ACCEPTED,
             Json(ApiResponse {
                 data: Some(inserted_id),
