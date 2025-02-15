@@ -38,7 +38,7 @@ pub fn generate_jwt(
 
 pub fn decode_jwt(token: &str, token_key: &str) -> Result<Claims> {
     let decoded_token = decode::<Claims>(
-        &token,
+        token,
         &DecodingKey::from_secret(token_key.as_ref()),
         &Validation::default(),
     )?;
