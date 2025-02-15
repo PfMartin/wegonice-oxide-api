@@ -1,5 +1,6 @@
 use anyhow::Result;
 use std::env;
+use tracing::info;
 
 #[derive(Debug)]
 pub struct Config {
@@ -8,6 +9,7 @@ pub struct Config {
     pub db_user_password: String,
     pub db_host: String,
     pub server_host: String,
+    pub jwt_secret: String,
 }
 
 impl Config {
@@ -15,10 +17,10 @@ impl Config {
         match config_path {
             Some(path) => {
                 if dotenv::from_path(path).is_err() {
-                    println!("Using config from env variables");
+                    info!("Using config from env variables");
                 };
             }
-            None => println!("Using config from env variables"),
+            None => info!("Using config from env variables"),
         }
 
         let db_name = env::var("MONGO_WEGONICE_DB")?;
@@ -26,6 +28,7 @@ impl Config {
         let db_user_password = env::var("MONGO_WEGONICE_PASSWORD")?;
         let db_host = env::var("MONGO_WEGONICE_HOST")?;
         let server_host = env::var("SERVER_HOST")?;
+        let jwt_secret = env::var("JWT_SECRET")?;
 
         Ok(Self {
             db_name,
@@ -33,6 +36,7 @@ impl Config {
             db_user_password,
             db_host,
             server_host,
+            jwt_secret,
         })
     }
 }
@@ -62,6 +66,7 @@ pub mod unit_tests_config {
                     db_user_password: "nicePassword".into(),
                     db_host: "127.0.0.1:27017".into(),
                     server_host: "127.0.0.1:3000".into(),
+                    jwt_secret: "test".into()
                 }),
                 env_file_path: "src/test-env".into(),
                 setup_env_file: Some(
@@ -71,6 +76,7 @@ pub mod unit_tests_config {
                     MONGO_WEGONICE_PASSWORD=nicePassword
                     MONGO_WEGONICE_HOST=127.0.0.1:27017
                     SERVER_HOST=127.0.0.1:3000
+                    JWT_SECRET=test
                     "#
                     .into(),
                 ),

@@ -1,22 +1,30 @@
 use anyhow::Result;
 use axum::{serve, Router};
-use std::mem::replace;
 use tokio::{self, net::TcpListener};
+use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer};
+use tracing::{info, Level};
 
 pub struct Server {}
 
 impl Server {
     pub async fn new(host: &str, routers: Vec<Router>) -> Result<Self> {
-        let router = routers.into_iter().fold(Router::new(), |mut acc, r| {
-            let temp_acc = replace(&mut acc, Router::new());
-            acc = temp_acc.merge(r);
-            acc
-        });
+        let router = routers
+            .into_iter()
+            .fold(Router::new(), |mut acc, r| {
+                acc = acc.merge(r);
+                acc
+            })
+            .layer(
+                TraceLayer::new_for_http()
+                    .make_span_with(DefaultMakeSpan::new().level(Level::INFO))
+                    .on_request(DefaultOnRequest::new().level(Level::INFO))
+                    .on_response(DefaultOnResponse::new().level(Level::INFO)),
+            );
 
         let listener = TcpListener::bind(host).await?;
-        println!("Started server on, {host}");
+        info!("Started server on, {host}");
 
-        serve(listener, router.into_make_service()).await?;
+        serve(listener, router).await?;
 
         Ok(Self {})
     }

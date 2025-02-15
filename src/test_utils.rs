@@ -36,6 +36,31 @@ pub fn assert_date_is_current(date: DateTime, title: &str) -> Result<()> {
 }
 
 #[cfg(test)]
+pub fn assert_date_in_range(
+    timestamp: i64,
+    expected_timestamp: i64,
+    range_ms: i64,
+    title: &str,
+) -> Result<()> {
+    let half_range = range_ms / 2;
+
+    let start_ms = expected_timestamp - half_range;
+    let end_ms = expected_timestamp + half_range;
+
+    assert!(
+        timestamp >= start_ms && timestamp <= end_ms,
+        "{}",
+        print_assert_failed(
+            title,
+            &format!("Between {start_ms} and {end_ms}"),
+            &format!("{timestamp}")
+        )
+    );
+
+    Ok(())
+}
+
+#[cfg(test)]
 pub fn assert_users_match(title: &str, user_1: &User, user_2: &User) {
     assert_eq!(
         user_1.email,
