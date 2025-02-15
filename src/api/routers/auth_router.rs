@@ -14,25 +14,36 @@ use crate::{
 
 use super::super::api_response::ApiResponse;
 
+#[derive(Clone)]
+struct RouterState {
+    jwt_secret: String,
+    db_handler: MongoDbHandler,
+}
+
 pub struct AuthRouter {
     pub router: Router,
 }
 
 impl AuthRouter {
-    pub fn new(db_handler: MongoDbHandler) -> Self {
+    pub fn new(db_handler: MongoDbHandler, jwt_secret: &str) -> Self {
         let base_path = "/auth";
+
+        let router_state = RouterState {
+            db_handler,
+            jwt_secret: String::from(jwt_secret),
+        };
 
         let router = Router::new()
             .route(&format!("{base_path}/register"), post(handle_register))
             .route(&format!("{base_path}/login"), post(handle_login))
-            .with_state(db_handler);
+            .with_state(router_state);
 
         Self { router }
     }
 }
 
 async fn handle_register(
-    State(db_handler): State<MongoDbHandler>,
+    State(router_state): State<RouterState>,
     Json(payload): extract::Json<AuthPayload>,
 ) -> (StatusCode, Json<ApiResponse<String>>) {
     let user_create: UserCreate = match payload.try_into() {
@@ -51,7 +62,7 @@ async fn handle_register(
         }
     };
 
-    match db_handler.create_user(user_create).await {
+    match router_state.db_handler.create_user(user_create).await {
         Ok(inserted_id) => (
             // TODO: SEND EMAIL REGARDING VERIFICATION
             StatusCode::ACCEPTED,
@@ -76,10 +87,14 @@ async fn handle_register(
 }
 
 async fn handle_login(
-    State(db_handler): State<MongoDbHandler>,
+    State(router_state): State<RouterState>,
     Json(payload): extract::Json<AuthPayload>,
 ) -> (StatusCode, Json<ApiResponse<String>>) {
-    let auth_info = match db_handler.get_user_auth_info(&payload.email).await {
+    let auth_info = match router_state
+        .db_handler
+        .get_user_auth_info(&payload.email)
+        .await
+    {
         Ok(u) => u,
         Err(err) => {
             let err_msg = format!(
@@ -124,7 +139,7 @@ async fn handle_login(
         );
     }
 
-    let token = match generate_jwt(&auth_info, 1, "test") {
+    let token = match generate_jwt(&auth_info, 1, &router_state.jwt_secret) {
         Ok(t) => t,
         Err(err) => {
             let err_msg = "Failed to generate JWT token";

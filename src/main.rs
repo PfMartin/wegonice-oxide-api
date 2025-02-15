@@ -9,7 +9,8 @@ mod test_utils;
 use anyhow::{Error, Result};
 use api::{
     routers::{
-        auth_router::AuthRouter, heart_beat_router::HeartBeatRouter, users_router::UsersRouter,
+        auth_router::AuthRouter, heart_beat_router::HeartBeatRouter, recipes_router::RecipesRouter,
+        users_router::UsersRouter,
     },
     server::Server,
 };
@@ -32,8 +33,9 @@ async fn main() -> Result<(), Error> {
 
     let routers = vec![
         HeartBeatRouter::new().router,
-        AuthRouter::new(db_handler.clone()).router,
+        AuthRouter::new(db_handler.clone(), &config.jwt_secret).router,
         UsersRouter::new(db_handler.clone()).router,
+        RecipesRouter::new(db_handler.clone(), &config.jwt_secret).router,
     ];
 
     let _ = Server::new(&config.server_host, routers).await?;
