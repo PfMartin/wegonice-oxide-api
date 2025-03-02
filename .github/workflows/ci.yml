@@ -5,8 +5,10 @@ on:
     branches:
       - main
   push:
-    branches: "*"
-    tags: "*"
+    branches:
+      - "*"
+    tags:
+      - "*"
 
 env:
   MONGO_INITDB_ROOT_USERNAME: admin
