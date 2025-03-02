@@ -10,7 +10,7 @@ DOCKER_EXECUTE_STRING=docker exec -it wegonice-db /bin/bash -c
 
 
 db-create-user:
-	${DOCKER_EXECUTE_STRING} "mongosh ${ADMIN_WEGONICE_CONNECTION_STRING} --eval 'db.createUser({user: \"${MONGO_WEGONICE_USER}\", pwd: \"${MONGO_WEGONICE_PASSWORD}\", roles: [{role: \"readWrite\", db: \"${MONGO_WEGONICE_DB}\"}]})'" 
+	${DOCKER_EXECUTE_STRING} "mongosh ${ADMIN_WEGONICE_CONNECTION_STRING} --eval 'db.createUser({user: \"${MONGO_WEGONICE_USER}\", pwd: \"${MONGO_WEGONICE_PASSWORD}\", roles: [{role: \"readWrite\", db: \"${MONGO_WEGONICE_DB}\"}]})'"
 
 db-connect-admin:
 	${DOCKER_EXECUTE_STRING} "mongosh ${ADMIN_WEGONICE_CONNECTION_STRING}"
@@ -20,6 +20,11 @@ db-connect-user:
 
 unit-tests:
 	cargo llvm-cov --workspace --ignore-filename-regex="test_utils|main" --all-features -- --test-threads=1 --nocapture
+
+integration_tests:
+	cargo test \
+	   --test integration_tests_register \
+	   --test integration_tests_login
 
 fmt-check:
 	cargo fmt --all --check

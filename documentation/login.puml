@@ -1,0 +1,13 @@
+@startuml
+
+actor User as user
+participant API as api
+database Database as db
+
+user -> api : Request to /login
+api -> db : Get user for credentials
+db --> api : Get result
+api -> api : Check user credentials\nand active flag
+api --> user : Response with JWT token
+
+@enduml
