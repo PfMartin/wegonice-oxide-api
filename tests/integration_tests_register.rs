@@ -1,19 +1,12 @@
 mod common;
 
 use anyhow::Result;
-use common::ResponseBody;
+use common::{AuthPayload, ResponseBody};
 use reqwest::{Client, StatusCode};
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize)]
-struct RegisterPayload {
-    email: String,
-    password: String,
-}
 
 #[tokio::test]
 async fn register_success() -> Result<()> {
-    let register_payload = RegisterPayload {
+    let register_payload = AuthPayload {
         email: "registerUser@gmail.com".into(),
         password: "test_password".into(),
     };
