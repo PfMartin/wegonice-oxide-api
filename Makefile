@@ -23,8 +23,9 @@ unit-tests:
 
 integration_tests:
 	cargo test \
-	   --test integration_tests_register \
-	   --test integration_tests_login
+		--test integration_tests_heartbeat \
+		--test integration_tests_register \
+		--test integration_tests_login
 
 fmt-check:
 	cargo fmt --all --check
