@@ -22,61 +22,61 @@ env:
   SERVER_HOST: 127.0.0.1:8080
   JWT_SECRET: testing
 
-# jobs:
-# format-check:
-#   name: code-format-check
-#   runs-on: ubuntu-latest
-#   steps:
-#     - name: Checkout source
-#       uses: actions/checkout@v4
-#     - name: Format check
-#       run: make fmt-check
-
-# clippy-check:
-#   name: clippy-check
-#   runs-on: ubuntu-latest
-#   steps:
-#     - name: Checkout source
-#       uses: actions/checkout@v4
-#     - name: Clippy check
-#       run: make clippy-check
-
-# unit-tests:
-#   name: unit-tests
-#   runs-on: ubuntu-latest
-#   needs:
-#     - format-check
-#     - clippy-check
-#   services:
-#     wegonice-test-db:
-#       image: mongo:8
-#       env:
-#         MONGO_INITDB_ROOT_USERNAME: ${{env.MONGO_INITDB_ROOT_USERNAME}}
-#         MONGO_INITDB_ROOT_PASSWORD: ${{env.MONGO_INITDB_ROOT_PASSWORD}}
-#         MONGO_INITDB_DATABASE: ${{env.MONGO_INITDB_DATABASE}}
-#       ports:
-#         - 27017-27019:27017-27019
-#       options: >-
-#         --health-cmd "echo 'db.runCommand("ping").ok' | mongosh --quiet"
-#         --health-interval 10s
-#         --health-timeout 10s
-#         --health-retries 5
-#         --name wegonice-test-db
-#   steps:
-#     - name: Checkout source
-#       uses: actions/checkout@v4
-#     - name: Setup db user for tests
-#       run: docker exec wegonice-test-db mongosh ${{env.MONGO_WEGONICE_DB}} -u ${{env.MONGO_INITDB_ROOT_USERNAME}} -p ${{env.MONGO_INITDB_ROOT_PASSWORD}} --authenticationDatabase ${{env.MONGO_INITDB_DATABASE}} --eval "db.createUser({user:'${{env.MONGO_WEGONICE_USER}}', pwd:'${{env.MONGO_WEGONICE_PASSWORD}}', roles:[{role:'readWrite', db:'${{env.MONGO_WEGONICE_DB}}'}]})"
-#     - name: Install llvm-cov
-#       run: cargo install cargo-llvm-cov
-#     - name: Run tests
-#       run: make unit-tests
 jobs:
+  format-check:
+    name: code-format-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Format check
+        run: make fmt-check
+
+  clippy-check:
+    name: clippy-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Clippy check
+        run: make clippy-check
+
+  unit-tests:
+    name: unit-tests
+    runs-on: ubuntu-latest
+    needs:
+      - format-check
+      - clippy-check
+    services:
+      wegonice-test-db:
+        image: mongo:8
+        env:
+          MONGO_INITDB_ROOT_USERNAME: ${{env.MONGO_INITDB_ROOT_USERNAME}}
+          MONGO_INITDB_ROOT_PASSWORD: ${{env.MONGO_INITDB_ROOT_PASSWORD}}
+          MONGO_INITDB_DATABASE: ${{env.MONGO_INITDB_DATABASE}}
+        ports:
+          - 27017-27019:27017-27019
+        options: >-
+          --health-cmd "echo 'db.runCommand("ping").ok' | mongosh --quiet"
+          --health-interval 10s
+          --health-timeout 10s
+          --health-retries 5
+          --name wegonice-test-db
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Setup db user for tests
+        run: docker exec wegonice-test-db mongosh ${{env.MONGO_WEGONICE_DB}} -u ${{env.MONGO_INITDB_ROOT_USERNAME}} -p ${{env.MONGO_INITDB_ROOT_PASSWORD}} --authenticationDatabase ${{env.MONGO_INITDB_DATABASE}} --eval "db.createUser({user:'${{env.MONGO_WEGONICE_USER}}', pwd:'${{env.MONGO_WEGONICE_PASSWORD}}', roles:[{role:'readWrite', db:'${{env.MONGO_WEGONICE_DB}}'}]})"
+      - name: Install llvm-cov
+        run: cargo install cargo-llvm-cov
+      - name: Run tests
+        run: make unit-tests
+
   build-binary:
     name: build-binary
     runs-on: ubuntu-latest
-    # needs:
-    #   - unit-tests
+    needs:
+      - unit-tests
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
