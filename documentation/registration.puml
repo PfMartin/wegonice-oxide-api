@@ -1,0 +1,17 @@
+@startuml
+
+actor User as user
+participant API as api
+database Database as db
+
+user -> api : Request to /register
+api -> db : Create new inactive user
+db --> api : Create Result
+api -> user : Email with confimartion link url
+api --> user : Register Response
+user -> api : Request to confirmation url
+api -> db : Set user to active
+db --> api : Update result
+api --> user : Confirmation response
+
+@enduml
