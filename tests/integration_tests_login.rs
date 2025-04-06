@@ -1,7 +1,7 @@
 mod common;
 
 use anyhow::Result;
-use common::{register_user, AuthPayload, ResponseBody};
+use common::{get_config, register_user, AuthPayload, ResponseBody};
 use pretty_assertions::assert_eq;
 use reqwest::{Client, StatusCode};
 
@@ -14,9 +14,11 @@ async fn login_success() -> Result<()> {
         password: "test_password".into(),
     };
 
+    let config = get_config(Some(".env"))?;
+
     let client = Client::new();
     let res = client
-        .post("http://localhost:5000/auth/login")
+        .post(format!("http://{}/auth/login", config.server_host))
         .json(&login_payload)
         .send()
         .await?;

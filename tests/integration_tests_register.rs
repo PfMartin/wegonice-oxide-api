@@ -1,7 +1,7 @@
 mod common;
 
 use anyhow::Result;
-use common::{AuthPayload, ResponseBody};
+use common::{get_config, AuthPayload, ResponseBody};
 use reqwest::{Client, StatusCode};
 
 #[tokio::test]
@@ -11,9 +11,11 @@ async fn register_success() -> Result<()> {
         password: "test_password".into(),
     };
 
+    let config = get_config(Some(".env"))?;
+
     let client = Client::new();
     let res = client
-        .post("http://localhost:5000/auth/register")
+        .post(format!("http://{}/auth/register", config.server_host))
         .json(&register_payload)
         .send()
         .await?;

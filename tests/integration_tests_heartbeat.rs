@@ -1,13 +1,15 @@
 mod common;
 
 use anyhow::Result;
-use common::ResponseBody;
+use common::{get_config, ResponseBody};
 use pretty_assertions::assert_eq;
 use reqwest::StatusCode;
 
 #[tokio::test]
 async fn heartbeat_request_successful() -> Result<()> {
-    let res = reqwest::get("http://localhost:5000/heart_beat").await?;
+    let config = get_config(Some(".env"))?;
+
+    let res = reqwest::get(format!("http://{}/heart_beat", config.server_host)).await?;
 
     assert_eq!(res.status().is_success(), true);
     assert_eq!(res.status(), StatusCode::OK);
