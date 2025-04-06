@@ -49,11 +49,11 @@ async fn handle_register(
     let user_create: UserCreate = match payload.try_into() {
         Ok(u) => u,
         Err(err) => {
-            let err_msg = "Failed to process provided user data";
+            let err_msg = "Failed to hash the provided password";
             info!("{err_msg}: {err}");
 
             return (
-                StatusCode::BAD_REQUEST,
+                StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ApiResponse {
                     data: None,
                     error: err_msg.into(),

@@ -3,9 +3,10 @@ mod common;
 use anyhow::Result;
 use common::{get_config, AuthPayload, ResponseBody};
 use reqwest::{Client, StatusCode};
+use serde::Serialize;
 
 #[tokio::test]
-async fn register_success() -> Result<()> {
+async fn register() -> Result<()> {
     let register_payload = AuthPayload {
         email: "registerUser@gmail.com".into(),
         password: "test_password".into(),
@@ -27,6 +28,34 @@ async fn register_success() -> Result<()> {
 
     assert_eq!(response_body.data.is_some(), true);
     assert_eq!(response_body.error, String::from(""));
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn register_invalid_payload() -> Result<()> {
+    #[derive(Serialize)]
+    struct InvalidPayload {
+        emails: String,
+        password: String,
+    }
+
+    let register_payload = InvalidPayload {
+        emails: "registerUser@gmail.com".into(),
+        password: "test_password".into(),
+    };
+
+    let config = get_config(Some(".env"))?;
+
+    let client = Client::new();
+    let res = client
+        .post(format!("http://{}/auth/register", config.server_host))
+        .json(&register_payload)
+        .send()
+        .await?;
+
+    assert_eq!(res.status().is_success(), false);
+    assert_eq!(res.status(), StatusCode::UNPROCESSABLE_ENTITY);
 
     Ok(())
 }

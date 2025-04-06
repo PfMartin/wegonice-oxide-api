@@ -4,6 +4,7 @@ use anyhow::Result;
 use common::{delete_users, get_config, register_user, AuthPayload, ResponseBody};
 use pretty_assertions::assert_eq;
 use reqwest::{Client, StatusCode};
+use serde::Serialize;
 
 #[tokio::test]
 async fn login() -> Result<()> {
@@ -82,6 +83,34 @@ async fn login() -> Result<()> {
 
         delete_users().await?;
     }
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn login_invalid_payload() -> Result<()> {
+    let config = get_config(Some(".env"))?;
+
+    #[derive(Serialize)]
+    struct InvalidPayload {
+        emails: String,
+        password: String,
+    }
+
+    let login_payload = InvalidPayload {
+        emails: "loginuser@gmail.com".into(),
+        password: "test_password".into(),
+    };
+
+    let client = Client::new();
+    let res = client
+        .post(format!("http://{}/auth/login", config.server_host))
+        .json(&login_payload)
+        .send()
+        .await?;
+
+    assert_eq!(res.status().is_success(), false);
+    assert_eq!(res.status(), StatusCode::UNPROCESSABLE_ENTITY);
 
     Ok(())
 }
